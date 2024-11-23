@@ -29,6 +29,27 @@ pub fn bindTemplateChild(widget_class: anytype, comptime widget_type: type, comp
 
 pub fn registerType(comptime T: type, comptime CT: type) c.GType {
     const gtk_type = c.gtk_widget_get_type();
+    const type_name = widgetTypeName(T);
+    return c.g_type_register_static_simple(gtk_type, type_name.ptr, @sizeOf(CT), @ptrCast(&(CT).init), @sizeOf(T), @ptrCast(&T.init), 0);
+}
+
+pub fn widgetParentOfType(widget: *c.GtkWidget, comptime T: type) ?*T {
+    var parent = c.gtk_widget_get_parent(widget);
+
+    while (parent != null) {
+        const parent_name = c.gtk_widget_get_name(parent);
+
+        if (std.mem.eql(u8, std.mem.span(parent_name), widgetTypeName(T))) {
+            return @ptrCast(parent);
+        }
+
+        parent = c.gtk_widget_get_parent(parent);
+    }
+
+    return null;
+}
+
+fn widgetTypeName(comptime T: type) []const u8 {
     const type_name = @typeName(T);
     var index: usize = 0;
 
@@ -37,5 +58,5 @@ pub fn registerType(comptime T: type, comptime CT: type) c.GType {
         index = num + 1;
     }
 
-    return c.g_type_register_static_simple(gtk_type, type_name[index..], @sizeOf(CT), @ptrCast(&(CT).init), @sizeOf(T), @ptrCast(&T.init), 0);
+    return type_name[index..];
 }

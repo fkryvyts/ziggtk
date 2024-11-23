@@ -2,7 +2,7 @@ const gtk = @import("gtk.zig");
 const example_widget = @import("example_widget.zig");
 const builder_ui = @embedFile("resources/builder.ui");
 
-const AppError = error{
+const errors = error{
     InitializationFailed,
 };
 
@@ -21,8 +21,6 @@ pub fn runApp() !void {
     gtk.signalConnect(app, "activate", @ptrCast(&onAppActivate));
     _ = gtk.g_application_run(@ptrCast(app), 0, null);
     gtk.g_object_unref(app);
-
-    return;
 }
 
 fn registerTypes() void {
@@ -30,13 +28,13 @@ fn registerTypes() void {
 }
 
 fn initBuilder() !void {
-    const b = gtk.gtk_builder_new() orelse return AppError.InitializationFailed;
+    const b = gtk.gtk_builder_new() orelse return errors.InitializationFailed;
 
     var err: [*c]gtk.GError = null;
     if (gtk.gtk_builder_add_from_string(b, builder_ui, builder_ui.len, &err) == 0) {
         gtk.g_printerr("Error loading file: %s\n", err.*.message);
         gtk.g_clear_error(&err);
-        return AppError.InitializationFailed;
+        return errors.InitializationFailed;
     }
 
     builder = b;

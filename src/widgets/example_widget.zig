@@ -1,11 +1,8 @@
-const c = @cImport({
-    @cInclude("gtk/gtk.h");
-});
-
+const std = @import("std");
 const gtk = @import("gtk.zig");
 
 pub const ExampleWidgetClass = extern struct {
-    parent_class: c.GtkWidgetClass,
+    parent_class: gtk.GtkWidgetClass,
 
     pub fn init(self: *ExampleWidgetClass) void {
         gtk.setTemplate(self, "resources/example_widget.ui");
@@ -15,17 +12,23 @@ pub const ExampleWidgetClass = extern struct {
 };
 
 pub const ExampleWidget = extern struct {
-    parent_instance: c.GtkWidget,
+    parent_instance: gtk.GtkWidget,
 
-    entry: *c.GtkEntry,
-    button: *c.GtkButton,
+    entry: *gtk.GtkEntry,
+    button: *gtk.GtkButton,
 
     pub fn init(self: *ExampleWidget) void {
-        c.gtk_widget_init_template(@ptrCast(self));
+        gtk.gtk_widget_init_template(@ptrCast(self));
         gtk.signalConnect(@ptrCast(self.button), "clicked", @ptrCast(&ExampleWidget.onBtnClick));
     }
 
-    fn onBtnClick(_: *gtk.GtkWidget, _: gtk.gpointer) void {
-        c.g_print("Clicked the button");
+    fn onBtnClick(button: *gtk.GtkWidget, _: gtk.gpointer) void {
+        const widget = gtk.widgetParentOfType(button, ExampleWidget);
+
+        if (widget) |_| {
+            std.debug.print("found parent widget", .{});
+        }
+
+        gtk.g_print("Clicked the button");
     }
 };
