@@ -22,10 +22,10 @@ pub const ExampleWidget = extern struct {
 
     pub fn init(self: *ExampleWidget) void {
         c.gtk_widget_init_template(@ptrCast(self));
-        _ = gtk.signalConnect(@ptrCast(self.button), "clicked", @ptrCast(&ExampleWidget.onBtnClick), null);
+        gtk.signalConnect(@ptrCast(self.button), "clicked", @ptrCast(&ExampleWidget.onBtnClick));
     }
 
-    fn onBtnClick() void {
+    fn onBtnClick(_: *gtk.GtkWidget, _: gtk.gpointer) void {
         c.g_print("Clicked the button");
     }
 };
