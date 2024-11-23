@@ -42,13 +42,14 @@ fn initBuilder() !void {
 
 fn onAppActivate() void {
     const app = application orelse return;
+    const b = builder orelse return;
 
-    const window = gtk.gtk_builder_get_object(builder orelse return, "window");
+    const window = gtk.gtk_builder_get_object(b, "window");
     gtk.gtk_window_set_application(@ptrCast(window), @ptrCast(app));
     gtk.gtk_window_set_default_size(@ptrCast(window), 400, 300);
     gtk.gtk_window_present(@ptrCast(window));
 
-    const quit_btn = gtk.gtk_builder_get_object(builder orelse return, "quit");
+    const quit_btn = gtk.gtk_builder_get_object(b, "quit");
     gtk.signalConnect(@ptrCast(quit_btn), "clicked", @ptrCast(&onAppQuit));
 
     gtk.g_print("Activated\n");
