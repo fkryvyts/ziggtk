@@ -1,2 +1,2 @@
 # ziggtk
-Gtk boilerplate for Zig
+Gtk 4 boilerplate for Zig
