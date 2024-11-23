@@ -17,8 +17,8 @@ pub const ExampleWidgetClass = extern struct {
 pub const ExampleWidget = extern struct {
     parent_instance: c.GtkWidget,
 
-    entry: *c.GtkWidget,
-    button: *c.GtkWidget,
+    entry: *c.GtkEntry,
+    button: *c.GtkButton,
 
     pub fn init(self: *ExampleWidget) void {
         c.gtk_widget_init_template(@ptrCast(self));
