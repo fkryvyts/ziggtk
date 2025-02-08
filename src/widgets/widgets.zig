@@ -10,7 +10,7 @@ var builder: ?*gtk.GtkBuilder = null;
 var application: ?*gtk.GtkApplication = null;
 
 pub fn runApp() !void {
-    gtk.gtk_init();
+    gtk.adw_init();
 
     registerTypes();
     try initBuilder();
@@ -24,7 +24,7 @@ pub fn runApp() !void {
 }
 
 fn registerTypes() void {
-    _ = gtk.registerType(example_widget.ExampleWidget, example_widget.ExampleWidgetClass);
+    _ = gtk.registerType(gtk.adw_bin_get_type(), example_widget.ExampleWidget, example_widget.ExampleWidgetClass);
 }
 
 fn initBuilder() !void {

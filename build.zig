@@ -13,6 +13,7 @@ pub fn build(b: *std.Build) void {
 
     app.linkSystemLibrary("c");
     app.linkSystemLibrary("gtk4");
+    app.linkSystemLibrary("libadwaita-1");
 
     b.installArtifact(app);
 

@@ -1,9 +1,11 @@
 pub usingnamespace @cImport({
     @cInclude("gtk/gtk.h");
+    @cInclude("adwaita.h");
 });
 
 const c = @cImport({
     @cInclude("gtk/gtk.h");
+    @cInclude("adwaita.h");
 });
 
 const std = @import("std");
@@ -27,10 +29,12 @@ pub fn bindTemplateChild(widget_class: anytype, comptime widget_type: type, comp
     c.gtk_widget_class_bind_template_child_full(@ptrCast(widget_class), name.ptr, 0, @offsetOf(widget_type, name));
 }
 
-pub fn registerType(comptime T: type, comptime CT: type) c.GType {
-    const gtk_type = c.gtk_widget_get_type();
+pub fn registerType(parent_type: c.GType, comptime T: type, comptime CT: type) c.GType {
     const type_name = widgetTypeName(T);
-    return c.g_type_register_static_simple(gtk_type, type_name.ptr, @sizeOf(CT), @ptrCast(&(CT).init), @sizeOf(T), @ptrCast(&T.init), 0);
+
+    std.debug.print("Type name: {s}\n", .{type_name});
+
+    return c.g_type_register_static_simple(parent_type, type_name.ptr, @sizeOf(CT), @ptrCast(&(CT).init), @sizeOf(T), @ptrCast(&(T).init), 0);
 }
 
 pub fn widgetParentOfType(widget: *c.GtkWidget, comptime T: type) ?*T {
