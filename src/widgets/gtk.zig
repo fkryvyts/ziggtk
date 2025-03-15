@@ -10,12 +10,12 @@ const c = @cImport({
 
 const std = @import("std");
 
-pub fn signalConnect(instance: c.gpointer, detailed_signal: [*c]const c.gchar, c_handler: c.GCallback) void {
-    _ = c.g_signal_connect_data(instance, detailed_signal, c_handler, null, null, 0);
+pub fn signalConnect(instance: c.gpointer, detailed_signal: []const u8, c_handler: c.GCallback) void {
+    _ = c.g_signal_connect_data(instance, detailed_signal.ptr, c_handler, null, null, 0);
 }
 
-pub fn signalConnectSwapped(instance: c.gpointer, detailed_signal: [*c]const c.gchar, c_handler: c.GCallback, data: c.gpointer) c.gulong {
-    return c.g_signal_connect_data(instance, detailed_signal, c_handler, data, null, c.G_CONNECT_SWAPPED);
+pub fn signalConnectSwapped(instance: c.gpointer, detailed_signal: []const u8, c_handler: c.GCallback, data: c.gpointer) c.gulong {
+    return c.g_signal_connect_data(instance, detailed_signal.ptr, c_handler, data, null, c.G_CONNECT_SWAPPED);
 }
 
 pub fn setTemplate(widget_class: anytype, comptime widget_ui_path: []const u8) void {

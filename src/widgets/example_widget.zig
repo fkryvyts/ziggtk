@@ -34,6 +34,10 @@ pub const ExampleWidget = extern struct {
             std.debug.print("found parent widget", .{});
         }
 
-        gtk.g_print("Clicked the button");
+        std.debug.print("Clicked the button", .{});
     }
 };
+
+pub fn registerType() gtk.GType {
+    return gtk.registerType(gtk.adw_bin_get_type(), ExampleWidget, ExampleWidgetClass);
+}
