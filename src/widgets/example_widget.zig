@@ -8,7 +8,6 @@ pub const ExampleWidgetClass = extern struct {
         gtk.setTemplate(self, "resources/example_widget.ui");
         gtk.bindTemplateChild(self, ExampleWidget, "stack");
         gtk.bindTemplateChild(self, ExampleWidget, "error_page");
-        //gtk.bindTemplateChild(self, ExampleWidget, "button");
     }
 };
 
@@ -28,7 +27,7 @@ pub const ExampleWidget = extern struct {
         // gtk.signalConnect(@ptrCast(self.button), "clicked", @ptrCast(&ExampleWidget.onBtnClick));
     }
 
-    fn onBtnClick(button: *gtk.GtkWidget, _: gtk.gpointer) void {
+    fn onBtnClick(button: *gtk.GtkWidget, _: gtk.gpointer) callconv(.c) void {
         const widget = gtk.widgetParentOfType(button, ExampleWidget);
 
         if (widget) |_| {

@@ -31,9 +31,6 @@ pub fn bindTemplateChild(widget_class: anytype, comptime widget_type: type, comp
 
 pub fn registerType(parent_type: c.GType, comptime T: type, comptime CT: type) c.GType {
     const type_name = widgetTypeName(T);
-
-    std.debug.print("Type name: {s}\n", .{type_name});
-
     return c.g_type_register_static_simple(parent_type, type_name.ptr, @sizeOf(CT), @ptrCast(&(CT).init), @sizeOf(T), @ptrCast(&(T).init), 0);
 }
 

@@ -40,7 +40,7 @@ fn initBuilder() !void {
     builder = b;
 }
 
-fn onAppActivate() void {
+fn onAppActivate() callconv(.c) void {
     const app = application orelse return;
     const b = builder orelse return;
 
@@ -55,7 +55,7 @@ fn onAppActivate() void {
     gtk.g_print("Activated\n");
 }
 
-fn onAppQuit() void {
+fn onAppQuit() callconv(.c) void {
     const app = application orelse return;
 
     gtk.g_application_quit(@ptrCast(app));
