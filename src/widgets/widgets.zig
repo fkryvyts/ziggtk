@@ -1,6 +1,7 @@
 const std = @import("std");
 const gtk = @import("gtk.zig");
-const example_widget = @import("example_widget.zig");
+const image_page = @import("image_page.zig");
+const error_details = @import("error_details.zig");
 const builder_ui = @embedFile("resources/builder.ui");
 
 const errors = error{
@@ -24,7 +25,8 @@ pub fn runApp() !void {
 }
 
 fn registerTypes() void {
-    _ = example_widget.registerType();
+    _ = image_page.registerType();
+    _ = error_details.registerType();
 }
 
 fn initBuilder() !void {
@@ -50,6 +52,9 @@ fn onAppActivate() callconv(.c) void {
 
     const quit_btn = gtk.gtk_builder_get_object(b, "quit");
     gtk.signalConnect(quit_btn, "clicked", &onAppQuit);
+
+    const dialog: ?*gtk.AdwDialog = @ptrCast(gtk.gtk_builder_get_object(b, "error_details"));
+    gtk.adw_dialog_present(dialog, null);
 
     std.debug.print("Activated", .{});
 }

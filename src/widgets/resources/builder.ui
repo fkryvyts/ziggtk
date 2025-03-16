@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
+  <object id="error_details" class="ZvErrorDetails"></object>
   <object id="window" class="GtkWindow">
     <property name="visible">True</property>
     <property name="title">Grid</property>
@@ -7,7 +8,7 @@
       <object id="grid" class="GtkGrid">
         <property name="visible">True</property>
         <child>
-          <object id="example_widget" class="ExampleWidget"></object>
+          <object id="image_page" class="ZvImagePage"></object>
         </child>
         <child>
           <object id="button1" class="GtkButton">

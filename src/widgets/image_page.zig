@@ -1,17 +1,17 @@
 const std = @import("std");
 const gtk = @import("gtk.zig");
 
-pub const ExampleWidgetClass = extern struct {
+pub const ZvImagePageClass = extern struct {
     parent_class: gtk.AdwBinClass,
 
-    pub fn init(self: *ExampleWidgetClass) callconv(.c) void {
-        gtk.setTemplate(self, "resources/example_widget.ui");
-        gtk.bindTemplateChild(self, ExampleWidget, "stack");
-        gtk.bindTemplateChild(self, ExampleWidget, "error_page");
+    pub fn init(self: *ZvImagePageClass) callconv(.c) void {
+        gtk.setTemplate(self, "resources/image_page.ui");
+        gtk.bindTemplateChild(self, ZvImagePage, "stack");
+        gtk.bindTemplateChild(self, ZvImagePage, "error_page");
     }
 };
 
-pub const ExampleWidget = extern struct {
+pub const ZvImagePage = extern struct {
     parent_instance: gtk.AdwBin,
 
     stack: *gtk.GtkStack,
@@ -20,15 +20,15 @@ pub const ExampleWidget = extern struct {
     entry: *gtk.GtkEntry,
     button: *gtk.GtkButton,
 
-    pub fn init(self: *ExampleWidget) callconv(.c) void {
+    pub fn init(self: *ZvImagePage) callconv(.c) void {
         gtk.gtk_widget_init_template(@ptrCast(self));
 
         gtk.gtk_stack_set_visible_child(self.stack, self.error_page);
-        // gtk.signalConnect(@ptrCast(self.button), "clicked", @ptrCast(&ExampleWidget.onBtnClick));
+        // gtk.signalConnect(@ptrCast(self.button), "clicked", @ptrCast(&ZvImagePage.onBtnClick));
     }
 
     fn onBtnClick(button: *gtk.GtkWidget, _: gtk.gpointer) callconv(.c) void {
-        const widget = gtk.widgetParentOfType(button, ExampleWidget);
+        const widget = gtk.widgetParentOfType(button, ZvImagePage);
 
         if (widget) |_| {
             std.debug.print("found parent widget", .{});
@@ -39,5 +39,5 @@ pub const ExampleWidget = extern struct {
 };
 
 pub fn registerType() gtk.GType {
-    return gtk.registerType(gtk.adw_bin_get_type(), ExampleWidget, ExampleWidgetClass);
+    return gtk.registerType(gtk.adw_bin_get_type(), ZvImagePage, ZvImagePageClass);
 }

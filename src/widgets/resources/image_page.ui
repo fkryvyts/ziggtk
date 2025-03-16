@@ -36,7 +36,7 @@
       </item>
     </section>
   </menu>
-  <template class="ExampleWidget" parent="AdwBin">
+  <template class="ZvImagePage" parent="AdwBin">
     <property name="hexpand">True</property>
     <property name="vexpand">True</property>
     <property name="child">
