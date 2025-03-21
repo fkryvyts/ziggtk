@@ -1,5 +1,6 @@
 const std = @import("std");
 const gtk = @import("gtk.zig");
+const image_view = @import("image_view.zig");
 
 pub const ZvImagePageClass = extern struct {
     parent_class: gtk.AdwBinClass,
@@ -8,6 +9,8 @@ pub const ZvImagePageClass = extern struct {
         gtk.setTemplate(self, "resources/image_page.ui");
         gtk.bindTemplateChild(self, ZvImagePage, "stack");
         gtk.bindTemplateChild(self, ZvImagePage, "error_page");
+        gtk.bindTemplateChild(self, ZvImagePage, "image_stack_page");
+        gtk.bindTemplateChild(self, ZvImagePage, "image_view");
     }
 };
 
@@ -16,6 +19,8 @@ pub const ZvImagePage = extern struct {
 
     stack: *gtk.GtkStack,
     error_page: *gtk.GtkWidget,
+    image_stack_page: *gtk.GtkWidget,
+    image_view: *image_view.ZvImageView,
 
     entry: *gtk.GtkEntry,
     button: *gtk.GtkButton,
@@ -23,7 +28,7 @@ pub const ZvImagePage = extern struct {
     pub fn init(self: *ZvImagePage) callconv(.c) void {
         gtk.gtk_widget_init_template(@ptrCast(self));
 
-        gtk.gtk_stack_set_visible_child(self.stack, self.error_page);
+        gtk.gtk_stack_set_visible_child(self.stack, self.image_stack_page);
         // gtk.signalConnect(@ptrCast(self.button), "clicked", @ptrCast(&ZvImagePage.onBtnClick));
     }
 

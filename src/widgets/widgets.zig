@@ -1,65 +1,58 @@
 const std = @import("std");
 const gtk = @import("gtk.zig");
+const image_view = @import("image_view.zig");
 const image_page = @import("image_page.zig");
 const error_details = @import("error_details.zig");
-const builder_ui = @embedFile("resources/builder.ui");
 
-const errors = error{
-    InitializationFailed,
-};
-
-var builder: ?*gtk.GtkBuilder = null;
 var application: ?*gtk.GtkApplication = null;
+var window: ?*gtk.GtkWindow = null;
+var dialog: ?*gtk.AdwDialog = null;
 
 pub fn runApp() !void {
     gtk.adw_init();
-
     registerTypes();
-    try initBuilder();
 
-    application = gtk.gtk_application_new("org.gtk.example", gtk.G_APPLICATION_DEFAULT_FLAGS) orelse return errors.InitializationFailed;
+    gtk.setCssStyleSheet("resources/style.css");
 
-    gtk.signalConnect(application, "activate", &onAppActivate);
-    _ = gtk.g_application_run(@ptrCast(application), 0, null);
-    gtk.g_object_unref(application);
+    const b = try gtk.newBuilder("resources/builder.ui");
+    defer gtk.g_object_unref(b);
+
+    const app = try gtk.newApplication();
+    const w = try gtk.getBuilderObject(b, "window");
+    const dg = try gtk.getBuilderObject(b, "error_details");
+    const quit_btn = try gtk.getBuilderObject(b, "quit");
+
+    gtk.gtk_window_set_default_size(@ptrCast(w), 400, 300);
+
+    gtk.signalConnect(quit_btn, "clicked", &onQuitBtnClick);
+    gtk.signalConnect(app, "activate", &onAppActivate);
+
+    application = app;
+    window = @ptrCast(w);
+    dialog = @ptrCast(dg);
+
+    _ = gtk.g_application_run(@ptrCast(app), 0, null);
 }
 
 fn registerTypes() void {
+    _ = image_view.registerType();
     _ = image_page.registerType();
     _ = error_details.registerType();
 }
 
-fn initBuilder() !void {
-    builder = gtk.gtk_builder_new() orelse return errors.InitializationFailed;
-
-    var err: [*c]gtk.GError = null;
-    if (gtk.gtk_builder_add_from_string(builder, builder_ui, builder_ui.len, &err) == 0) {
-        gtk.g_printerr("Error loading file: %s\n", err.*.message);
-        gtk.g_clear_error(&err);
-        return errors.InitializationFailed;
-    }
-}
-
 fn onAppActivate() callconv(.c) void {
     const app = application orelse return;
-    const b = builder orelse return;
-
-    const window: ?*gtk.GtkWindow = @ptrCast(gtk.gtk_builder_get_object(b, "window"));
     const w = window orelse return;
+    const dg = dialog orelse return;
+
     gtk.gtk_window_set_application(w, app);
-    gtk.gtk_window_set_default_size(w, 400, 300);
     gtk.gtk_window_present(w);
-
-    const quit_btn = gtk.gtk_builder_get_object(b, "quit");
-    gtk.signalConnect(quit_btn, "clicked", &onAppQuit);
-
-    const dialog: ?*gtk.AdwDialog = @ptrCast(gtk.gtk_builder_get_object(b, "error_details"));
-    gtk.adw_dialog_present(dialog, null);
+    gtk.adw_dialog_present(dg, null);
 
     std.debug.print("Activated", .{});
 }
 
-fn onAppQuit() callconv(.c) void {
+fn onQuitBtnClick() callconv(.c) void {
     const app = application orelse return;
 
     gtk.g_application_quit(@ptrCast(app));

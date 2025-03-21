@@ -100,8 +100,11 @@
               <object class="GtkScrolledWindow" id="scrolled_window">
                 <property name="propagate-natural-height">True</property>
                 <property name="propagate-natural-width">True</property>
-                <!-- <property name="child">
-                  <object class="LpImage" id="image">
+                <property name="child">
+                  <object class="ZvImageView" id="image_view">
+                    <style>
+                      <class name="zv_image_view" />
+                    </style>
                     <child>
                       <object class="GtkGestureClick" id="right_click_gesture">
                         <property name="button">3</property>
@@ -113,7 +116,7 @@
                       </object>
                     </child>
                   </object>
-                </property> -->
+                </property>
               </object>
             </child>
             <child>
