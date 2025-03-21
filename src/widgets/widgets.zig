@@ -6,7 +6,8 @@ const error_details = @import("error_details.zig");
 
 var application: ?*gtk.GtkApplication = null;
 var window: ?*gtk.GtkWindow = null;
-var dialog: ?*gtk.AdwDialog = null;
+var dialog: ?*error_details.ZvErrorDetails = null;
+var img_page: ?*image_page.ZvImagePage = null;
 
 pub fn runApp() !void {
     gtk.adw_init();
@@ -18,18 +19,23 @@ pub fn runApp() !void {
     defer gtk.g_object_unref(b);
 
     const app = try gtk.newApplication();
-    const w = try gtk.getBuilderObject(b, "window");
-    const dg = try gtk.getBuilderObject(b, "error_details");
-    const quit_btn = try gtk.getBuilderObject(b, "quit");
+    const w: *gtk.GtkWindow = @ptrCast(try gtk.getBuilderObject(b, "window"));
+    const dg: *error_details.ZvErrorDetails = @ptrCast(try gtk.getBuilderObject(b, "error_details"));
+    const quit_btn: *gtk.GtkButton = @ptrCast(try gtk.getBuilderObject(b, "quit"));
+    const ip: *image_page.ZvImagePage = @ptrCast(try gtk.getBuilderObject(b, "image_page"));
 
-    gtk.gtk_window_set_default_size(@ptrCast(w), 400, 300);
+    gtk.gtk_window_set_default_size(w, 400, 300);
 
-    gtk.signalConnect(quit_btn, "clicked", &onQuitBtnClick);
-    gtk.signalConnect(app, "activate", &onAppActivate);
+    gtk.signalConnect(quit_btn, "clicked", &onQuitBtnClick, null);
+    gtk.signalConnect(app, "activate", &onAppActivate, null);
 
     application = app;
-    window = @ptrCast(w);
-    dialog = @ptrCast(dg);
+    window = w;
+    dialog = dg;
+    img_page = ip;
+
+    const thread = try std.Thread.spawn(.{}, loadImage, .{});
+    defer thread.join();
 
     _ = gtk.g_application_run(@ptrCast(app), 0, null);
 }
@@ -47,7 +53,7 @@ fn onAppActivate() callconv(.c) void {
 
     gtk.gtk_window_set_application(w, app);
     gtk.gtk_window_present(w);
-    gtk.adw_dialog_present(dg, null);
+    gtk.adw_dialog_present(@ptrCast(dg), null);
 
     std.debug.print("Activated", .{});
 }
@@ -56,4 +62,9 @@ fn onQuitBtnClick() callconv(.c) void {
     const app = application orelse return;
 
     gtk.g_application_quit(@ptrCast(app));
+}
+
+fn loadImage() !void {
+    const ip = img_page orelse return;
+    ip.loadImage("/home/fedir/Downloads/image.jpg");
 }

@@ -1,5 +1,6 @@
 const std = @import("std");
 const gtk = @import("gtk.zig");
+const errors = @import("errors.zig");
 
 pub const ZvImageViewClass = extern struct {
     parent_class: gtk.GtkWidgetClass,
@@ -13,13 +14,19 @@ pub const ZvImageView = extern struct {
     parent_instance: gtk.GtkWidget,
     image_texture: ?*gtk.GdkTexture,
 
-    pub fn init(self: *ZvImageView) callconv(.c) void {
-        self.image_texture = gtk.gdk_texture_new_from_filename("/home/fedir/Downloads/image.jpg", null);
+    pub fn init(_: *ZvImageView) callconv(.c) void {}
+
+    pub fn setImageTexture(self: *ZvImageView, image_texture: ?*gtk.GdkTexture) void {
+        self.image_texture = image_texture;
     }
 
     pub fn onSnapshot(self: *ZvImageView, snapshot: *gtk.GtkSnapshot) callconv(.c) void {
-        const width = @as(f32, @floatFromInt(gtk.gtk_widget_get_width(@ptrCast(self))));
-        const height = @as(f32, @floatFromInt(gtk.gtk_widget_get_height(@ptrCast(self))));
+        if (self.image_texture == null) {
+            return;
+        }
+
+        const width: f32 = @floatFromInt(gtk.gtk_widget_get_width(@ptrCast(self)));
+        const height: f32 = @floatFromInt(gtk.gtk_widget_get_height(@ptrCast(self)));
 
         var rect = std.mem.zeroes(gtk.graphene_rect_t);
         _ = gtk.graphene_rect_init(&rect, 0, 0, width, height);

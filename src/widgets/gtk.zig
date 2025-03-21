@@ -9,13 +9,10 @@ const c = @cImport({
 });
 
 const std = @import("std");
+const errors = @import("errors.zig");
 
-pub const errors = error{
-    InitializationFailed,
-};
-
-pub fn signalConnect(instance: c.gpointer, detailed_signal: []const u8, c_handler: c.GCallback) void {
-    _ = c.g_signal_connect_data(instance, detailed_signal.ptr, c_handler, null, null, 0);
+pub fn signalConnect(instance: c.gpointer, detailed_signal: []const u8, c_handler: c.GCallback, data: c.gpointer) void {
+    _ = c.g_signal_connect_data(instance, detailed_signal.ptr, c_handler, data, null, 0);
 }
 
 pub fn signalConnectSwapped(instance: c.gpointer, detailed_signal: []const u8, c_handler: c.GCallback, data: c.gpointer) c.gulong {
@@ -53,24 +50,28 @@ pub fn registerType(parent_type: c.GType, comptime T: type, comptime CT: type) c
 
 pub fn newBuilder(comptime builder_ui_path: []const u8) !*c.GtkBuilder {
     const builder_ui = @embedFile(builder_ui_path);
-    const b = c.gtk_builder_new() orelse return errors.InitializationFailed;
+    const b = c.gtk_builder_new() orelse return errors.err.InitializationFailed;
 
     var err: [*c]c.GError = null;
     if (c.gtk_builder_add_from_string(b, builder_ui, builder_ui.len, &err) == 0) {
-        c.g_printerr("Error loading file: %s\n", err.*.message);
-        c.g_clear_error(&err);
-        return errors.InitializationFailed;
+        printAndCleanError(&err, "Error loading file");
+        return errors.err.InitializationFailed;
     }
 
     return b;
 }
 
+pub fn printAndCleanError(err: [*c][*c]c.GError, message: []const u8) void {
+    c.g_printerr("%s: %s\n", message.ptr, err.*.*.message);
+    c.g_clear_error(err);
+}
+
 pub fn getBuilderObject(builder: ?*c.GtkBuilder, name: []const u8) !*c.GObject {
-    return c.gtk_builder_get_object(builder, name.ptr) orelse return errors.InitializationFailed;
+    return c.gtk_builder_get_object(builder, name.ptr) orelse return errors.err.InitializationFailed;
 }
 
 pub fn newApplication() !*c.GtkApplication {
-    return c.gtk_application_new("org.gtk.example", c.G_APPLICATION_DEFAULT_FLAGS) orelse return errors.InitializationFailed;
+    return c.gtk_application_new("org.gtk.example", c.G_APPLICATION_DEFAULT_FLAGS) orelse return errors.err.InitializationFailed;
 }
 
 pub fn widgetParentOfType(widget: *c.GtkWidget, comptime T: type) ?*T {
