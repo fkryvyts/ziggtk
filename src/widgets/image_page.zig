@@ -55,12 +55,14 @@ pub const ZvImagePage = extern struct {
         gtk.gtk_stack_set_visible_child(self.stack, self.image_stack_page);
     }
 
-    fn onRightClickGesture(_: *gtk.GtkGesture, _: c_int, x: f64, y: f64, self: *ZvImagePage) callconv(.c) void {
+    fn onRightClickGesture(g: *gtk.GtkGesture, _: c_int, x: f64, y: f64, self: *ZvImagePage) callconv(.c) void {
         self.showPopoverAt(x, y);
+        _ = gtk.gtk_gesture_set_state(g, gtk.GTK_EVENT_SEQUENCE_CLAIMED);
     }
 
-    fn onLongPressGesture(_: *gtk.GtkGesture, x: f64, y: f64, self: *ZvImagePage) callconv(.c) void {
+    fn onLongPressGesture(g: *gtk.GtkGesture, x: f64, y: f64, self: *ZvImagePage) callconv(.c) void {
         self.showPopoverAt(x, y);
+        _ = gtk.gtk_gesture_set_state(g, gtk.GTK_EVENT_SEQUENCE_CLAIMED);
     }
 
     fn showPopoverAt(self: *ZvImagePage, x: f64, y: f64) void {

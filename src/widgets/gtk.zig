@@ -90,6 +90,75 @@ pub fn widgetParentOfType(widget: *c.GtkWidget, comptime T: type) ?*T {
     return null;
 }
 
+pub fn boolAsGValue(v: bool) c.GValue {
+    var val = std.mem.zeroes(c.GValue);
+    _ = c.g_value_init(&val, c.G_TYPE_BOOLEAN);
+    c.g_value_set_boolean(&val, @intFromBool(v));
+    return val;
+}
+
+pub fn propertiesBinder(comptime T: type, comptime props: []const []const u8) type {
+    return struct {
+        const strct = @This();
+
+        pub fn bind(widget_class: *c.GtkWidgetClass) void {
+            widget_class.parent_class.set_property = @ptrCast(&strct.onSetProperty);
+            widget_class.parent_class.get_property = @ptrCast(&strct.onGetProperty);
+
+            inline for (0..(props.len)) |i| {
+                const property_id = i + 1;
+
+                switch (@FieldType(T, props[i])) {
+                    bool => {
+                        installBoolProp(widget_class, property_id, props[i]);
+                    },
+                    else => {},
+                }
+            }
+        }
+
+        pub fn onSetProperty(self: *T, property_id: c.guint, val: *const c.GValue, _: *c.GParamSpec) callconv(.c) void {
+            inline for (0..(props.len)) |i| {
+                switch (@FieldType(T, props[i])) {
+                    bool => {
+                        if (property_id == i + 1) {
+                            getBoolPropFrom(@constCast(&@field(self, props[i])), val);
+                        }
+                    },
+                    else => {},
+                }
+            }
+        }
+
+        pub fn onGetProperty(self: *T, property_id: c.guint, val: *c.GValue, _: *c.GParamSpec) callconv(.c) void {
+            inline for (0..(props.len)) |i| {
+                switch (@FieldType(T, props[i])) {
+                    bool => {
+                        if (property_id == i + 1) {
+                            setBoolPropTo(@field(self, props[i]), val);
+                        }
+                    },
+                    else => {},
+                }
+            }
+        }
+    };
+}
+
+fn installBoolProp(widget_class: anytype, property_id: c.guint, name: []const u8) void {
+    const spec = c.g_param_spec_boolean(name.ptr, null, null, 0, c.G_PARAM_READWRITE);
+    defer c.g_param_spec_unref(spec);
+    c.g_object_class_install_property(@ptrCast(widget_class), property_id, spec);
+}
+
+fn getBoolPropFrom(prop: *bool, val: *const c.GValue) void {
+    prop.* = c.g_value_get_boolean(val) > 0;
+}
+
+fn setBoolPropTo(prop: bool, val: *c.GValue) void {
+    c.g_value_set_boolean(val, @intFromBool(prop));
+}
+
 fn widgetTypeName(comptime T: type) []const u8 {
     const type_name = @typeName(T);
     var index: usize = 0;

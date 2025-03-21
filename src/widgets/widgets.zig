@@ -2,12 +2,13 @@ const std = @import("std");
 const gtk = @import("gtk.zig");
 const image_view = @import("image_view.zig");
 const image_page = @import("image_page.zig");
+const image_book = @import("image_book.zig");
 const error_details = @import("error_details.zig");
 
 var application: ?*gtk.GtkApplication = null;
 var window: ?*gtk.GtkWindow = null;
 var dialog: ?*error_details.ZvErrorDetails = null;
-var img_page: ?*image_page.ZvImagePage = null;
+var img_book: ?*image_book.ZvImageBook = null;
 
 pub fn runApp() !void {
     gtk.adw_init();
@@ -22,7 +23,7 @@ pub fn runApp() !void {
     const w: *gtk.GtkWindow = @ptrCast(try gtk.getBuilderObject(b, "window"));
     const dg: *error_details.ZvErrorDetails = @ptrCast(try gtk.getBuilderObject(b, "error_details"));
     const quit_btn: *gtk.GtkButton = @ptrCast(try gtk.getBuilderObject(b, "quit"));
-    const ip: *image_page.ZvImagePage = @ptrCast(try gtk.getBuilderObject(b, "image_page"));
+    const ib: *image_book.ZvImageBook = @ptrCast(try gtk.getBuilderObject(b, "image_book"));
 
     gtk.gtk_window_set_default_size(w, 400, 300);
 
@@ -32,7 +33,7 @@ pub fn runApp() !void {
     application = app;
     window = w;
     dialog = dg;
-    img_page = ip;
+    img_book = ib;
 
     const thread = try std.Thread.spawn(.{}, loadImage, .{});
     defer thread.join();
@@ -43,6 +44,7 @@ pub fn runApp() !void {
 fn registerTypes() void {
     _ = image_view.registerType();
     _ = image_page.registerType();
+    _ = image_book.registerType();
     _ = error_details.registerType();
 }
 
@@ -65,6 +67,6 @@ fn onQuitBtnClick() callconv(.c) void {
 }
 
 fn loadImage() !void {
-    const ip = img_page orelse return;
-    ip.loadImage("/home/fedir/Downloads/image.jpg");
+    const ib = img_book orelse return;
+    ib.loadImage("/home/fedir/Downloads/image2.jpg");
 }

@@ -25,11 +25,11 @@ pub const ZvImageView = extern struct {
             return;
         }
 
-        const width: f32 = @floatFromInt(gtk.gtk_widget_get_width(@ptrCast(self)));
-        const height: f32 = @floatFromInt(gtk.gtk_widget_get_height(@ptrCast(self)));
+        const w: f32 = @floatFromInt(gtk.gtk_widget_get_width(@ptrCast(self)));
+        const h: f32 = @floatFromInt(gtk.gtk_widget_get_height(@ptrCast(self)));
 
         var rect = std.mem.zeroes(gtk.graphene_rect_t);
-        _ = gtk.graphene_rect_init(&rect, 0, 0, width, height);
+        _ = gtk.graphene_rect_init(&rect, 0, 0, w, h);
         gtk.gtk_snapshot_append_texture(snapshot, self.image_texture, &rect);
     }
 };

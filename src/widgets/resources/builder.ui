@@ -8,7 +8,7 @@
       <object id="grid" class="GtkGrid">
         <property name="visible">True</property>
         <child>
-          <object id="image_page" class="ZvImagePage"></object>
+          <object id="image_book" class="ZvImageBook"></object>
         </child>
         <child>
           <object id="button1" class="GtkButton">
