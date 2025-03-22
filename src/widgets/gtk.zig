@@ -55,8 +55,10 @@ pub fn setTemplate(widget_class: anytype, comptime widget_ui_res_name: []const u
     c.gtk_widget_class_set_layout_manager_type(@ptrCast(widget_class), c.gtk_bin_layout_get_type());
 }
 
-pub fn bindTemplateChild(widget_class: anytype, comptime widget_type: type, comptime name: []const u8) void {
-    c.gtk_widget_class_bind_template_child_full(@ptrCast(widget_class), name.ptr, 0, @offsetOf(widget_type, name));
+pub fn bindTemplateChildren(widget_class: anytype, comptime widget_type: type, comptime names: []const []const u8) void {
+    inline for (names) |name| {
+        bindTemplateChild(widget_class, widget_type, name);
+    }
 }
 
 pub fn bindProperties(widget_class: anytype, comptime widget_type: type, comptime props: []const []const u8) void {
@@ -116,6 +118,10 @@ pub fn boolAsGValue(v: bool) c.GValue {
     _ = c.g_value_init(&val, c.G_TYPE_BOOLEAN);
     c.g_value_set_boolean(&val, @intFromBool(v));
     return val;
+}
+
+fn bindTemplateChild(widget_class: anytype, comptime widget_type: type, comptime name: []const u8) void {
+    c.gtk_widget_class_bind_template_child_full(@ptrCast(widget_class), name.ptr, 0, @offsetOf(widget_type, name));
 }
 
 fn propertiesBinder(comptime widget_type: type, comptime props: []const []const u8) type {

@@ -102,6 +102,8 @@
                 <property name="propagate-natural-width">True</property>
                 <property name="child">
                   <object class="ZvImageView" id="image_view">
+                    <property name="hexpand">true</property>
+                    <property name="vexpand">true</property>
                     <style>
                       <class name="zv_image_view" />
                     </style>

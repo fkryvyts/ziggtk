@@ -8,14 +8,16 @@ pub const ZvImagePageClass = extern struct {
 
     pub fn init(self: *ZvImagePageClass) callconv(.c) void {
         gtk.setTemplate(self, "ui/image_page.ui");
-        gtk.bindTemplateChild(self, ZvImagePage, "stack");
-        gtk.bindTemplateChild(self, ZvImagePage, "spinner_page");
-        gtk.bindTemplateChild(self, ZvImagePage, "error_page");
-        gtk.bindTemplateChild(self, ZvImagePage, "image_stack_page");
-        gtk.bindTemplateChild(self, ZvImagePage, "image_view");
-        gtk.bindTemplateChild(self, ZvImagePage, "popover");
-        gtk.bindTemplateChild(self, ZvImagePage, "right_click_gesture");
-        gtk.bindTemplateChild(self, ZvImagePage, "press_gesture");
+        gtk.bindTemplateChildren(self, ZvImagePage, &.{
+            "stack",
+            "spinner_page",
+            "error_page",
+            "image_stack_page",
+            "image_view",
+            "popover",
+            "right_click_gesture",
+            "press_gesture",
+        });
     }
 };
 
