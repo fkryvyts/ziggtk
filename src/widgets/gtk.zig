@@ -30,6 +30,9 @@ pub fn installResources(comptime resource_path: []const u8) !void {
     c.g_resources_register(res);
 
     defer c.g_resource_unref(res);
+
+    const icon_theme = c.gtk_icon_theme_get_for_display(c.gdk_display_get_default());
+    c.gtk_icon_theme_add_resource_path(icon_theme, resource_prefix);
 }
 
 pub fn signalConnect(instance: c.gpointer, detailed_signal: []const u8, c_handler: c.GCallback, data: c.gpointer) void {
