@@ -43,6 +43,10 @@ pub fn bindTemplateChild(widget_class: anytype, comptime widget_type: type, comp
     c.gtk_widget_class_bind_template_child_full(@ptrCast(widget_class), name.ptr, 0, @offsetOf(widget_type, name));
 }
 
+pub fn bindProperties(widget_class: anytype, comptime widget_type: type, comptime props: []const []const u8) void {
+    propertiesBinder(widget_type, props).bind(@ptrCast(widget_class));
+}
+
 pub fn registerType(parent_type: c.GType, comptime T: type, comptime CT: type) c.GType {
     const type_name = widgetTypeName(T);
     return c.g_type_register_static_simple(parent_type, type_name.ptr, @sizeOf(CT), @ptrCast(&(CT).init), @sizeOf(T), @ptrCast(&(T).init), 0);
@@ -97,7 +101,7 @@ pub fn boolAsGValue(v: bool) c.GValue {
     return val;
 }
 
-pub fn propertiesBinder(comptime T: type, comptime props: []const []const u8) type {
+fn propertiesBinder(comptime widget_type: type, comptime props: []const []const u8) type {
     return struct {
         const strct = @This();
 
@@ -108,21 +112,21 @@ pub fn propertiesBinder(comptime T: type, comptime props: []const []const u8) ty
             inline for (0..(props.len)) |i| {
                 const property_id = i + 1;
 
-                switch (@FieldType(T, props[i])) {
+                switch (@FieldType(widget_type, props[i])) {
                     bool => {
-                        installBoolProp(widget_class, property_id, props[i]);
+                        return installBoolProp(widget_class, property_id, props[i]);
                     },
                     else => {},
                 }
             }
         }
 
-        pub fn onSetProperty(self: *T, property_id: c.guint, val: *const c.GValue, _: *c.GParamSpec) callconv(.c) void {
+        pub fn onSetProperty(self: *widget_type, property_id: c.guint, val: *const c.GValue, _: *c.GParamSpec) callconv(.c) void {
             inline for (0..(props.len)) |i| {
-                switch (@FieldType(T, props[i])) {
+                switch (@FieldType(widget_type, props[i])) {
                     bool => {
                         if (property_id == i + 1) {
-                            getBoolPropFrom(@constCast(&@field(self, props[i])), val);
+                            return getBoolPropFrom(@constCast(&@field(self, props[i])), val);
                         }
                     },
                     else => {},
@@ -130,12 +134,12 @@ pub fn propertiesBinder(comptime T: type, comptime props: []const []const u8) ty
             }
         }
 
-        pub fn onGetProperty(self: *T, property_id: c.guint, val: *c.GValue, _: *c.GParamSpec) callconv(.c) void {
+        pub fn onGetProperty(self: *widget_type, property_id: c.guint, val: *c.GValue, _: *c.GParamSpec) callconv(.c) void {
             inline for (0..(props.len)) |i| {
-                switch (@FieldType(T, props[i])) {
+                switch (@FieldType(widget_type, props[i])) {
                     bool => {
                         if (property_id == i + 1) {
-                            setBoolPropTo(@field(self, props[i]), val);
+                            return setBoolPropTo(@field(self, props[i]), val);
                         }
                     },
                     else => {},
