@@ -17,8 +17,7 @@ const application_id = "com.github.fkryvyts.Ziggtk";
 pub fn installResources(comptime resource_path: []const u8) !void {
     const res_data = @embedFile(resource_path);
 
-    const res_bytes = c.g_bytes_new(res_data, res_data.len);
-    //defer c.g_free(res_bytes);
+    const res_bytes = c.g_bytes_new_static(res_data, res_data.len);
 
     var err: [*c]c.GError = null;
     const res = c.g_resource_new_from_data(res_bytes, &err);
