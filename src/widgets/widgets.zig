@@ -5,7 +5,7 @@ const image_page = @import("image_page.zig");
 const image_book = @import("image_book.zig");
 const error_details = @import("error_details.zig");
 
-var application: ?*gtk.GtkApplication = null;
+var application: ?*gtk.GApplication = null;
 var window: ?*gtk.GtkWindow = null;
 var dialog: ?*error_details.ZvErrorDetails = null;
 var img_book: ?*image_book.ZvImageBook = null;
@@ -15,7 +15,6 @@ pub fn runApp() !void {
     registerTypes();
 
     try gtk.installResources("resources/gresources.gresource");
-    gtk.setCssStyleSheet("css/style.css");
 
     const b = try gtk.newBuilder("ui/builder.ui");
     defer gtk.g_object_unref(b);
@@ -39,7 +38,7 @@ pub fn runApp() !void {
     const thread = try std.Thread.spawn(.{}, loadImage, .{});
     defer thread.join();
 
-    _ = gtk.g_application_run(@ptrCast(app), 0, null);
+    _ = gtk.g_application_run(app, 0, null);
 }
 
 fn registerTypes() void {
@@ -54,7 +53,7 @@ fn onAppActivate() callconv(.c) void {
     const w = window orelse return;
     const dg = dialog orelse return;
 
-    gtk.gtk_window_set_application(w, app);
+    gtk.gtk_window_set_application(w, @ptrCast(app));
     gtk.gtk_window_present(w);
     gtk.adw_dialog_present(@ptrCast(dg), null);
 
@@ -64,7 +63,7 @@ fn onAppActivate() callconv(.c) void {
 fn onQuitBtnClick() callconv(.c) void {
     const app = application orelse return;
 
-    gtk.g_application_quit(@ptrCast(app));
+    gtk.g_application_quit(app);
 }
 
 fn loadImage() !void {

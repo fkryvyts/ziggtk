@@ -9,6 +9,7 @@
     <file compressed="true">ui/error_details.ui</file>
     <file compressed="true">ui/image_book.ui</file>
     <file compressed="true">ui/image_page.ui</file>
-    <file compressed="true">css/style.css</file>
+    <file compressed="true">style.css</file>
+    <file compressed="true">style-dark.css</file>
   </gresource>
 </gresources>

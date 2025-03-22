@@ -90,8 +90,9 @@ pub fn getBuilderObject(builder: ?*c.GtkBuilder, name: []const u8) !*c.GObject {
     return c.gtk_builder_get_object(builder, name.ptr) orelse return errors.err.InitializationFailed;
 }
 
-pub fn newApplication() !*c.GtkApplication {
-    return c.gtk_application_new(application_id, c.G_APPLICATION_DEFAULT_FLAGS) orelse return errors.err.InitializationFailed;
+pub fn newApplication() !*c.GApplication {
+    const app = c.adw_application_new(application_id, c.G_APPLICATION_DEFAULT_FLAGS) orelse return errors.err.InitializationFailed;
+    return @ptrCast(app);
 }
 
 pub fn widgetParentOfType(widget: *c.GtkWidget, comptime T: type) ?*T {
