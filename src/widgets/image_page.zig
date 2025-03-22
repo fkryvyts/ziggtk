@@ -7,7 +7,7 @@ pub const ZvImagePageClass = extern struct {
     parent_class: gtk.AdwBinClass,
 
     pub fn init(self: *ZvImagePageClass) callconv(.c) void {
-        gtk.setTemplate(self, "resources/image_page.ui");
+        gtk.setTemplate(self, "ui/image_page.ui");
         gtk.bindTemplateChild(self, ZvImagePage, "stack");
         gtk.bindTemplateChild(self, ZvImagePage, "spinner_page");
         gtk.bindTemplateChild(self, ZvImagePage, "error_page");

@@ -11,6 +11,27 @@ const c = @cImport({
 const std = @import("std");
 const errors = @import("errors.zig");
 
+const resource_prefix = "/com/github/fkryvyts/ziggtk/";
+const application_id = "com.github.fkryvyts.Ziggtk";
+
+pub fn installResources(comptime resource_path: []const u8) !void {
+    const res_data = @embedFile(resource_path);
+
+    const res_bytes = c.g_bytes_new(res_data, res_data.len);
+    //defer c.g_free(res_bytes);
+
+    var err: [*c]c.GError = null;
+    const res = c.g_resource_new_from_data(res_bytes, &err);
+    if (err != null) {
+        printAndCleanError(&err, "Error loading resource");
+        return errors.err.InitializationFailed;
+    }
+
+    c.g_resources_register(res);
+
+    defer c.g_resource_unref(res);
+}
+
 pub fn signalConnect(instance: c.gpointer, detailed_signal: []const u8, c_handler: c.GCallback, data: c.gpointer) void {
     _ = c.g_signal_connect_data(instance, detailed_signal.ptr, c_handler, data, null, 0);
 }
@@ -19,23 +40,19 @@ pub fn signalConnectSwapped(instance: c.gpointer, detailed_signal: []const u8, c
     return c.g_signal_connect_data(instance, detailed_signal.ptr, c_handler, data, null, c.G_CONNECT_SWAPPED);
 }
 
-pub fn setCssStyleSheet(comptime css_path: []const u8) void {
-    const widget_ui = @embedFile(css_path);
+pub fn setCssStyleSheet(comptime css_res_name: []const u8) void {
+    const res_path = resource_prefix ++ css_res_name;
 
     const cssProvider = c.gtk_css_provider_new();
     defer c.g_object_unref(cssProvider);
 
-    c.gtk_css_provider_load_from_data(@ptrCast(cssProvider), widget_ui, widget_ui.len);
+    c.gtk_css_provider_load_from_resource(@ptrCast(cssProvider), res_path.ptr);
     c.gtk_style_context_add_provider_for_display(c.gdk_display_get_default(), @ptrCast(cssProvider), c.GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 }
 
-pub fn setTemplate(widget_class: anytype, comptime widget_ui_path: []const u8) void {
-    const widget_ui = @embedFile(widget_ui_path);
-
-    const template = c.g_bytes_new(widget_ui, widget_ui.len);
-    defer c.g_free(template);
-
-    c.gtk_widget_class_set_template(@ptrCast(widget_class), template);
+pub fn setTemplate(widget_class: anytype, comptime widget_ui_res_name: []const u8) void {
+    const res_path = resource_prefix ++ widget_ui_res_name;
+    c.gtk_widget_class_set_template_from_resource(@ptrCast(widget_class), res_path.ptr);
     c.gtk_widget_class_set_layout_manager_type(@ptrCast(widget_class), c.gtk_bin_layout_get_type());
 }
 
@@ -52,12 +69,12 @@ pub fn registerType(parent_type: c.GType, comptime T: type, comptime CT: type) c
     return c.g_type_register_static_simple(parent_type, type_name.ptr, @sizeOf(CT), @ptrCast(&(CT).init), @sizeOf(T), @ptrCast(&(T).init), 0);
 }
 
-pub fn newBuilder(comptime builder_ui_path: []const u8) !*c.GtkBuilder {
-    const builder_ui = @embedFile(builder_ui_path);
+pub fn newBuilder(comptime builder_ui_res_name: []const u8) !*c.GtkBuilder {
     const b = c.gtk_builder_new() orelse return errors.err.InitializationFailed;
+    const res_path = resource_prefix ++ builder_ui_res_name;
 
     var err: [*c]c.GError = null;
-    if (c.gtk_builder_add_from_string(b, builder_ui, builder_ui.len, &err) == 0) {
+    if (c.gtk_builder_add_from_resource(b, res_path.ptr, &err) == 0) {
         printAndCleanError(&err, "Error loading file");
         return errors.err.InitializationFailed;
     }
@@ -75,7 +92,7 @@ pub fn getBuilderObject(builder: ?*c.GtkBuilder, name: []const u8) !*c.GObject {
 }
 
 pub fn newApplication() !*c.GtkApplication {
-    return c.gtk_application_new("org.gtk.example", c.G_APPLICATION_DEFAULT_FLAGS) orelse return errors.err.InitializationFailed;
+    return c.gtk_application_new(application_id, c.G_APPLICATION_DEFAULT_FLAGS) orelse return errors.err.InitializationFailed;
 }
 
 pub fn widgetParentOfType(widget: *c.GtkWidget, comptime T: type) ?*T {

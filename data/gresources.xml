@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gresources>
+  <gresource prefix="/com/github/fkryvyts/ziggtk">
+    <file alias="minus-large-symbolic.svg" compressed="true">icons/scalable/actions/minus-large-symbolic.svg</file>
+    <file alias="plus-large-symbolic.svg" compressed="true">icons/scalable/actions/plus-large-symbolic.svg</file>
+    <file alias="zoom-toggle-symbolic.svg" compressed="true">icons/scalable/actions/zoom-toggle-symbolic.svg</file>
+    <file alias="check-plain-symbolic.svg" compressed="true">icons/scalable/actions/check-plain-symbolic.svg</file>
+    <file compressed="true">ui/builder.ui</file>
+    <file compressed="true">ui/error_details.ui</file>
+    <file compressed="true">ui/image_book.ui</file>
+    <file compressed="true">ui/image_page.ui</file>
+    <file compressed="true">css/style.css</file>
+  </gresource>
+</gresources>

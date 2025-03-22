@@ -14,9 +14,10 @@ pub fn runApp() !void {
     gtk.adw_init();
     registerTypes();
 
-    gtk.setCssStyleSheet("resources/style.css");
+    try gtk.installResources("resources/gresources.gresource");
+    gtk.setCssStyleSheet("css/style.css");
 
-    const b = try gtk.newBuilder("resources/builder.ui");
+    const b = try gtk.newBuilder("ui/builder.ui");
     defer gtk.g_object_unref(b);
 
     const app = try gtk.newApplication();

@@ -22,6 +22,10 @@ pub fn build(b: *std.Build) void {
     const run_cmd_b = b.addRunArtifact(app);
     run_cmd_b.step.dependOn(b.getInstallStep());
 
+    const build_res_cmd = b.addSystemCommand(&.{"glib-compile-resources"});
+    build_res_cmd.addArgs(&.{ "data/gresources.xml", "--sourcedir", "data", "--target", "src/widgets/resources/gresources.gresource" });
+
     const run_step_b = b.step("run", "Run the app");
     run_step_b.dependOn(&run_cmd_b.step);
+    run_step_b.dependOn(&build_res_cmd.step);
 }
