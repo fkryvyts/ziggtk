@@ -7,6 +7,7 @@
     border-radius: 12px;
     padding: 6px;
     margin: 18px;
+    background-color: rgba(0, 0, 0, 0.65);
 }
 
 .osd-box menubutton button {

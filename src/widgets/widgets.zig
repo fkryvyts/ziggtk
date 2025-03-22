@@ -69,5 +69,5 @@ fn onQuitBtnClick() callconv(.c) void {
 
 fn loadImage() !void {
     const ib = img_book orelse return;
-    ib.loadImage("/home/fedir/Downloads/image2.jpg");
+    ib.loadImage("/home/fedir/Downloads/image.jpg");
 }
