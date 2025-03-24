@@ -4,10 +4,14 @@ const image_view = @import("image_view.zig");
 const image_page = @import("image_page.zig");
 const image_book = @import("image_book.zig");
 const error_details = @import("error_details.zig");
+const properties_view = @import("properties_view.zig");
+const drag_overlay = @import("drag_overlay.zig");
+const shy_bin = @import("shy_bin.zig");
+const image_window = @import("image_window.zig");
 
 var application: ?*gtk.GApplication = null;
-var window: ?*gtk.GtkWindow = null;
-var dialog: ?*error_details.ZvErrorDetails = null;
+var img_window: ?*image_window.ZvImageWindow = null;
+var err_dialog: ?*error_details.ZvErrorDetails = null;
 var img_book: ?*image_book.ZvImageBook = null;
 
 pub fn runApp() !void {
@@ -16,24 +20,18 @@ pub fn runApp() !void {
 
     try gtk.installResources("resources/gresources.gresource");
 
-    const b = try gtk.newBuilder("ui/builder.ui");
+    const b = try gtk.newBuilder("ui/builder.xml");
     defer gtk.g_object_unref(b);
 
     const app = try gtk.newApplication();
-    const w: *gtk.GtkWindow = @ptrCast(try gtk.getBuilderObject(b, "window"));
+    const w: *image_window.ZvImageWindow = @ptrCast(try gtk.getBuilderObject(b, "image_window"));
     const dg: *error_details.ZvErrorDetails = @ptrCast(try gtk.getBuilderObject(b, "error_details"));
-    const quit_btn: *gtk.GtkButton = @ptrCast(try gtk.getBuilderObject(b, "quit"));
-    const ib: *image_book.ZvImageBook = @ptrCast(try gtk.getBuilderObject(b, "image_book"));
 
-    gtk.gtk_window_set_default_size(w, 400, 300);
-
-    gtk.signalConnect(quit_btn, "clicked", &onQuitBtnClick, null);
     gtk.signalConnect(app, "activate", &onAppActivate, null);
 
     application = app;
-    window = w;
-    dialog = dg;
-    img_book = ib;
+    img_window = w;
+    err_dialog = dg;
 
     const thread = try std.Thread.spawn(.{}, loadImage, .{});
     defer thread.join();
@@ -46,24 +44,22 @@ fn registerTypes() void {
     _ = image_page.registerType();
     _ = image_book.registerType();
     _ = error_details.registerType();
+    _ = properties_view.registerType();
+    _ = drag_overlay.registerType();
+    _ = shy_bin.registerType();
+    _ = image_window.registerType();
 }
 
 fn onAppActivate() callconv(.c) void {
     const app = application orelse return;
-    const w = window orelse return;
-    const dg = dialog orelse return;
+    const w = img_window orelse return;
+    //const dg = err_dialog orelse return;
 
-    gtk.gtk_window_set_application(w, @ptrCast(app));
-    gtk.gtk_window_present(w);
-    gtk.adw_dialog_present(@ptrCast(dg), null);
+    gtk.gtk_window_set_application(@ptrCast(w), @ptrCast(app));
+    gtk.gtk_window_present(@ptrCast(w));
+    //gtk.adw_dialog_present(@ptrCast(dg), null);
 
     std.debug.print("Activated", .{});
-}
-
-fn onQuitBtnClick() callconv(.c) void {
-    const app = application orelse return;
-
-    gtk.g_application_quit(app);
 }
 
 fn loadImage() !void {

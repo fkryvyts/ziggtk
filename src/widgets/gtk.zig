@@ -39,20 +39,10 @@ pub fn signalConnectSwapped(instance: c.gpointer, detailed_signal: []const u8, c
     return c.g_signal_connect_data(instance, detailed_signal.ptr, c_handler, data, null, c.G_CONNECT_SWAPPED);
 }
 
-pub fn setCssStyleSheet(comptime css_res_name: []const u8) void {
-    const res_path = resource_prefix ++ css_res_name;
-
-    const cssProvider = c.gtk_css_provider_new();
-    defer c.g_object_unref(cssProvider);
-
-    c.gtk_css_provider_load_from_resource(@ptrCast(cssProvider), res_path.ptr);
-    c.gtk_style_context_add_provider_for_display(c.gdk_display_get_default(), @ptrCast(cssProvider), c.GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-}
-
 pub fn setTemplate(widget_class: anytype, comptime widget_ui_res_name: []const u8) void {
     const res_path = resource_prefix ++ widget_ui_res_name;
     c.gtk_widget_class_set_template_from_resource(@ptrCast(widget_class), res_path.ptr);
-    c.gtk_widget_class_set_layout_manager_type(@ptrCast(widget_class), c.gtk_bin_layout_get_type());
+    //c.gtk_widget_class_set_layout_manager_type(@ptrCast(widget_class), c.gtk_bin_layout_get_type());
 }
 
 pub fn bindTemplateChildren(widget_class: anytype, comptime widget_type: type, comptime names: []const []const u8) void {

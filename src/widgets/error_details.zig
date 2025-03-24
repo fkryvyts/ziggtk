@@ -5,7 +5,7 @@ pub const ZvErrorDetailsClass = extern struct {
     parent_class: gtk.AdwDialogClass,
 
     pub fn init(self: *ZvErrorDetailsClass) callconv(.c) void {
-        gtk.setTemplate(self, "ui/error_details.ui");
+        gtk.setTemplate(self, "ui/error_details.xml");
     }
 };
 
