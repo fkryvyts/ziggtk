@@ -6,11 +6,15 @@ pub const ZvImageWindowClass = extern struct {
 
     pub fn init(self: *ZvImageWindowClass) callconv(.c) void {
         gtk.setTemplate(self, "ui/image_window.xml");
+        gtk.bindProperties(self, ZvImageWindow, &.{
+            "fullscreened",
+        });
     }
 };
 
 pub const ZvImageWindow = extern struct {
     parent_instance: gtk.AdwApplicationWindow,
+    fullscreened: bool,
 
     pub fn init(self: *ZvImageWindow) callconv(.c) void {
         gtk.gtk_widget_init_template(@ptrCast(self));

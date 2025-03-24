@@ -66,7 +66,7 @@
       <object class="AdwToastOverlay" id="toast_overlay">
         <child>
           <object class="AdwBin">
-            <property name="child">
+            <child>
               <object class="AdwToolbarView" id="toolbar_view">
                 <child>
                   <object class="GtkShortcutController" id="shortcut_controller">
@@ -75,11 +75,14 @@
                 </child>
                 <child type="top">
                   <object class="ZvShyBin">
-                    <property name="child">
+                    <child>
                       <object class="AdwHeaderBar" id="headerbar">
+                        <property name="show-end-title-buttons" bind-source="ZvImageWindow" bind-property="fullscreened" bind-flags="sync-create|invert-boolean" />
+                        <property name="show-start-title-buttons" bind-source="ZvImageWindow" bind-property="fullscreened" bind-flags="sync-create|invert-boolean" />
                         <child type="start">
                           <object class="GtkButton" id="fullscreen_button">
                             <property name="action-name">win.toggle-fullscreen</property>
+                            <property name="icon-name">view-fullscreen-symbolic</property>
                             <property name="tooltip-text" translatable="yes">Toggle Fullscreen</property>
                           </object>
                         </child>
@@ -132,7 +135,7 @@
                           <object class="GtkEventControllerMotion" id="headerbar_events" />
                         </child>
                       </object>
-                    </property>
+                    </child>
                   </object>
                 </child>
                 <property name="content">
@@ -196,7 +199,7 @@
                   </object>
                 </property>
               </object>
-            </property>
+            </child>
           </object>
         </child>
       </object>
