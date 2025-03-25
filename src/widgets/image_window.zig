@@ -1,21 +1,31 @@
 const std = @import("std");
 const gtk = @import("gtk.zig");
+const image_book = @import("image_book.zig");
 
 pub const ZvImageWindowClass = extern struct {
     parent_class: gtk.AdwApplicationWindowClass,
 
     pub fn init(self: *ZvImageWindowClass) callconv(.c) void {
         gtk.setTemplate(self, "ui/image_window.xml");
+        gtk.bindTemplateChildren(self, ZvImageWindow, &.{
+            "stack",
+            "status_page",
+            "image_book",
+        });
         gtk.bindProperties(self, ZvImageWindow, &.{
             "fullscreened",
         });
-
-        gtk.gtk_widget_class_install_action(@ptrCast(self), "win.open", null, @ptrCast(&ZvImageWindow.onWinOpen));
+        gtk.bindActions(self, &.{
+            .{ .n = "win.open", .f = @ptrCast(&ZvImageWindow.onWinOpen) },
+        });
     }
 };
 
 pub const ZvImageWindow = extern struct {
     parent_instance: gtk.AdwApplicationWindow,
+    stack: *gtk.GtkStack,
+    status_page: *gtk.AdwStatusPage,
+    image_book: *image_book.ZvImageBook,
     fullscreened: bool,
 
     pub fn init(self: *ZvImageWindow) callconv(.c) void {
@@ -55,7 +65,7 @@ pub const ZvImageWindow = extern struct {
         gtk.gtk_file_dialog_open(dialog, @ptrCast(self), null, @ptrCast(&ZvImageWindow.onFileSelected), self);
     }
 
-    fn onFileSelected(dialog: *gtk.GtkFileDialog, res: *gtk.GAsyncResult, _: *ZvImageWindow) callconv(.c) void {
+    fn onFileSelected(dialog: *gtk.GtkFileDialog, res: *gtk.GAsyncResult, self: *ZvImageWindow) callconv(.c) void {
         var err: [*c]gtk.GError = null;
         const file = gtk.gtk_file_dialog_open_finish(dialog, res, &err);
         if (err != null) {
@@ -65,7 +75,11 @@ pub const ZvImageWindow = extern struct {
 
         defer gtk.g_object_unref(file);
 
-        std.debug.print("Selected file", .{});
+        const filepath = gtk.g_file_get_path(file);
+        defer gtk.g_free(filepath);
+
+        self.image_book.loadImage(std.mem.span(filepath));
+        gtk.gtk_stack_set_visible_child(self.stack, @ptrCast(self.image_book));
     }
 };
 

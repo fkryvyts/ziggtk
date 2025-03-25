@@ -41,6 +41,7 @@
     <property name="vexpand">True</property>
     <property name="child">
       <object class="GtkStack" id="stack">
+        <property name="visible-child">spinner_page</property>
         <property name="transition-type">crossfade</property>
         <child>
           <object class="AdwBin" id="spinner_page">

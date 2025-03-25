@@ -55,6 +55,17 @@ pub fn bindProperties(widget_class: anytype, comptime widget_type: type, comptim
     propertiesBinder(widget_type, props).bind(@ptrCast(widget_class));
 }
 
+pub const Action = struct {
+    n: []const u8,
+    f: c.GtkWidgetActionActivateFunc,
+};
+
+pub fn bindActions(widget_class: anytype, actions: []const Action) void {
+    for (actions) |action| {
+        c.gtk_widget_class_install_action(@ptrCast(widget_class), action.n.ptr, null, action.f);
+    }
+}
+
 pub fn registerType(parent_type: c.GType, comptime T: type, comptime CT: type) c.GType {
     const type_name = widgetTypeName(T);
     return c.g_type_register_static_simple(parent_type, type_name.ptr, @sizeOf(CT), @ptrCast(&(CT).init), @sizeOf(T), @ptrCast(&(T).init), 0);

@@ -17,6 +17,11 @@ pub const ZvImageView = extern struct {
     pub fn init(_: *ZvImageView) callconv(.c) void {}
 
     pub fn setImageTexture(self: *ZvImageView, image_texture: ?*gtk.GdkTexture) void {
+        if (self.image_texture != null) {
+            gtk.g_object_unref(self.image_texture);
+        }
+
+        _ = gtk.g_object_ref(@ptrCast(image_texture));
         self.image_texture = image_texture;
     }
 

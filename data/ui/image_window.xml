@@ -179,7 +179,7 @@
                               </object>
                             </child>
                             <child>
-                              <object class="ZvImageBook" id="image_view">
+                              <object class="ZvImageBook" id="image_book">
                                 <child>
                                   <object class="GtkGestureClick" id="forward_click_gesture">
                                     <property name="button">9</property>

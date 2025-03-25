@@ -35,7 +35,6 @@ pub const ZvImagePage = extern struct {
 
     pub fn init(self: *ZvImagePage) callconv(.c) void {
         gtk.gtk_widget_init_template(@ptrCast(self));
-        gtk.gtk_stack_set_visible_child(self.stack, self.spinner_page);
 
         gtk.signalConnect(self.right_click_gesture, "pressed", @ptrCast(&ZvImagePage.onRightClickGesture), self);
         gtk.signalConnect(self.press_gesture, "pressed", @ptrCast(&ZvImagePage.onLongPressGesture), self);
@@ -52,6 +51,8 @@ pub const ZvImagePage = extern struct {
             gtk.gtk_stack_set_visible_child(self.stack, self.error_page);
             return;
         }
+
+        defer gtk.g_object_unref(image_texture);
 
         self.image_view.setImageTexture(image_texture);
         gtk.gtk_stack_set_visible_child(self.stack, self.image_stack_page);

@@ -27,8 +27,6 @@ pub const ZvImageBook = extern struct {
 
     pub fn loadImage(self: *ZvImageBook, path: []const u8) void {
         self.image_page.loadImage(path);
-
-        gtk.g_object_set_property(@ptrCast(self), "zoom_toggle_state", &gtk.boolAsGValue(true));
     }
 };
 
