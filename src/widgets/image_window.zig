@@ -9,6 +9,8 @@ pub const ZvImageWindowClass = extern struct {
         gtk.bindProperties(self, ZvImageWindow, &.{
             "fullscreened",
         });
+
+        gtk.gtk_widget_class_install_action(@ptrCast(self), "win.open", null, @ptrCast(&ZvImageWindow.onWinOpen));
     }
 };
 
@@ -18,6 +20,52 @@ pub const ZvImageWindow = extern struct {
 
     pub fn init(self: *ZvImageWindow) callconv(.c) void {
         gtk.gtk_widget_init_template(@ptrCast(self));
+    }
+
+    fn onWinOpen(self: *ZvImageWindow, _: [*c]const gtk.gchar) callconv(.c) void {
+        const dialog = gtk.gtk_file_dialog_new();
+        defer gtk.g_object_unref(dialog);
+
+        const folder = gtk.g_file_new_for_path("/home/fedir/Downloads");
+        defer gtk.g_object_unref(folder);
+
+        const filters = gtk.g_list_store_new(gtk.gtk_file_filter_get_type());
+        defer gtk.g_object_unref(filters);
+
+        const filter_all = gtk.gtk_file_filter_new();
+        defer gtk.g_object_unref(filter_all);
+
+        const filter_supported = gtk.gtk_file_filter_new();
+        defer gtk.g_object_unref(filter_supported);
+
+        gtk.gtk_file_filter_add_pattern(filter_all, "*");
+        gtk.gtk_file_filter_set_name(filter_all, "All files");
+        gtk.g_list_store_append(filters, filter_all);
+
+        gtk.gtk_file_filter_add_mime_type(filter_supported, "image/jpeg");
+        gtk.gtk_file_filter_add_mime_type(filter_supported, "image/png");
+        gtk.gtk_file_filter_set_name(filter_supported, "Supported image formats");
+        gtk.g_list_store_append(filters, filter_supported);
+
+        gtk.gtk_file_dialog_set_title(dialog, "Open Image");
+        gtk.gtk_file_dialog_set_modal(dialog, 1);
+        gtk.gtk_file_dialog_set_initial_folder(dialog, folder);
+        gtk.gtk_file_dialog_set_filters(dialog, @ptrCast(filters));
+        gtk.gtk_file_dialog_set_default_filter(dialog, filter_supported);
+        gtk.gtk_file_dialog_open(dialog, @ptrCast(self), null, @ptrCast(&ZvImageWindow.onFileSelected), self);
+    }
+
+    fn onFileSelected(dialog: *gtk.GtkFileDialog, res: *gtk.GAsyncResult, _: *ZvImageWindow) callconv(.c) void {
+        var err: [*c]gtk.GError = null;
+        const file = gtk.gtk_file_dialog_open_finish(dialog, res, &err);
+        if (err != null) {
+            gtk.printAndCleanError(&err, "Error opening file");
+            return;
+        }
+
+        defer gtk.g_object_unref(file);
+
+        std.debug.print("Selected file", .{});
     }
 };
 
