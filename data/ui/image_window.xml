@@ -149,6 +149,7 @@
                     <property name="content">
                       <object class="ZvDragOverlay" id="drag_overlay">
                         <property name="vexpand">true</property>
+                        <property name="drop_target">drop_target</property>
                         <child>
                           <object class="GtkStack" id="stack">
                             <property name="visible-child">status_page</property>

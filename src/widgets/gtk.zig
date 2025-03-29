@@ -138,35 +138,51 @@ fn propertiesBinder(comptime widget_type: type, comptime props: []const []const 
 
                 switch (@FieldType(widget_type, props[i])) {
                     bool => {
-                        return installBoolProp(widget_class, property_id, props[i]);
+                        installBoolProp(widget_class, property_id, props[i]);
                     },
-                    else => {},
+                    else => {
+                        const tn = comptime builtinWidgetTypeName(@FieldType(widget_type, props[i]));
+                        installObjectProp(widget_class, property_id, props[i], @field(c, camelToSname(tn) ++ "_get_type")());
+                    },
                 }
             }
         }
 
         pub fn onSetProperty(self: *widget_type, property_id: c.guint, val: *const c.GValue, _: *c.GParamSpec) callconv(.c) void {
             inline for (0..(props.len)) |i| {
-                switch (@FieldType(widget_type, props[i])) {
-                    bool => {
-                        if (property_id == i + 1) {
-                            return getBoolPropFrom(@constCast(&@field(self, props[i])), val);
-                        }
-                    },
-                    else => {},
+                if (property_id == i + 1) {
+                    switch (@FieldType(widget_type, props[i])) {
+                        bool => {
+                            @field(self, props[i]) = c.g_value_get_boolean(val) > 0;
+                        },
+                        else => {
+                            @field(self, props[i]) = @ptrCast(c.g_value_get_object(val));
+                        },
+                    }
+
+                    const call_name = comptime snakeToCamel(props[i]);
+                    if (@hasDecl(widget_type, "onSetProperty" ++ call_name)) {
+                        @field(widget_type, "onSetProperty" ++ call_name)(self);
+                    }
+
+                    return;
                 }
             }
         }
 
         pub fn onGetProperty(self: *widget_type, property_id: c.guint, val: *c.GValue, _: *c.GParamSpec) callconv(.c) void {
             inline for (0..(props.len)) |i| {
-                switch (@FieldType(widget_type, props[i])) {
-                    bool => {
-                        if (property_id == i + 1) {
-                            return setBoolPropTo(@field(self, props[i]), val);
-                        }
-                    },
-                    else => {},
+                if (property_id == i + 1) {
+                    switch (@FieldType(widget_type, props[i])) {
+                        bool => {
+                            c.g_value_set_boolean(val, @intFromBool(@field(self, props[i])));
+                        },
+                        else => {
+                            c.g_value_set_object(val, @ptrCast(@field(self, props[i])));
+                        },
+                    }
+
+                    return;
                 }
             }
         }
@@ -179,12 +195,10 @@ fn installBoolProp(widget_class: anytype, property_id: c.guint, name: []const u8
     c.g_object_class_install_property(@ptrCast(widget_class), property_id, spec);
 }
 
-fn getBoolPropFrom(prop: *bool, val: *const c.GValue) void {
-    prop.* = c.g_value_get_boolean(val) > 0;
-}
-
-fn setBoolPropTo(prop: bool, val: *c.GValue) void {
-    c.g_value_set_boolean(val, @intFromBool(prop));
+fn installObjectProp(widget_class: anytype, property_id: c.guint, name: []const u8, object_type: c.GType) void {
+    const spec = c.g_param_spec_object(name.ptr, null, null, object_type, c.G_PARAM_READWRITE);
+    defer c.g_param_spec_unref(spec);
+    c.g_object_class_install_property(@ptrCast(widget_class), property_id, spec);
 }
 
 fn widgetTypeName(comptime T: type) []const u8 {
@@ -197,4 +211,62 @@ fn widgetTypeName(comptime T: type) []const u8 {
     }
 
     return type_name[index..];
+}
+
+fn builtinWidgetTypeName(comptime T: type) []const u8 {
+    const type_name = @typeName(T);
+    var index: usize = 0;
+
+    // Remove struct__ prefix
+    if (std.mem.indexOf(u8, type_name, "struct__")) |num| {
+        index = num + 8;
+    }
+
+    return type_name[index..];
+}
+
+fn snakeToCamel(comptime name: []const u8) []const u8 {
+    var res = std.mem.zeroes([name.len]u8);
+    var ii = 0;
+    var i = 0;
+
+    while (i < name.len) : (i += 1) {
+        if ((i > 0) and (name[i - 1] == '_')) {
+            res[ii] = std.ascii.toUpper(name[i]);
+            ii += 1;
+            continue;
+        }
+
+        if (i == 0) {
+            res[ii] = std.ascii.toUpper(name[i]);
+            ii += 1;
+            continue;
+        }
+
+        if (name[i] != '_') {
+            res[ii] = name[i];
+            ii += 1;
+            continue;
+        }
+    }
+
+    return res[0..ii];
+}
+
+fn camelToSname(comptime name: []const u8) []const u8 {
+    var res = std.mem.zeroes([2 * name.len]u8);
+    var ii = 0;
+    var i = 0;
+
+    while (i < name.len) : (i += 1) {
+        if (i > 0 and std.ascii.isUpper(name[i])) {
+            res[ii] = '_';
+            ii += 1;
+        }
+
+        res[ii] = std.ascii.toLower(name[i]);
+        ii += 1;
+    }
+
+    return res[0..ii];
 }
