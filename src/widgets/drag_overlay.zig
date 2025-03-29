@@ -26,14 +26,20 @@ pub const ZvDragOverlay = extern struct {
 
     pub fn init(self: *ZvDragOverlay) callconv(.c) void {
         gtk.gtk_widget_init_template(@ptrCast(self));
-
         gtk.gtk_widget_set_can_target(@ptrCast(@alignCast(self.revealer)), 0);
     }
 
-    pub fn onSetPropertyDropTarget(_: *ZvDragOverlay) void {}
+    pub fn onSetPropertyDropTarget(self: *ZvDragOverlay) void {
+        gtk.signalConnect(@ptrCast(self.drop_target), "notify::current-drop", @ptrCast(&ZvDragOverlay.onNotifyCurrentDrop), self);
+    }
 
     pub fn onSetPropertyContent(self: *ZvDragOverlay) void {
         gtk.gtk_overlay_set_child(self.overlay, self.content);
+    }
+
+    fn onNotifyCurrentDrop(drop_target: *gtk.GtkDropTarget, _: gtk.gpointer, self: *ZvDragOverlay) callconv(.c) void {
+        const has_target = gtk.gtk_drop_target_get_current_drop(drop_target) != null;
+        gtk.gtk_revealer_set_reveal_child(self.revealer, @intFromBool(has_target));
     }
 };
 

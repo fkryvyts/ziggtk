@@ -11,6 +11,7 @@ pub const ZvImageWindowClass = extern struct {
             "stack",
             "status_page",
             "image_book",
+            "drop_target",
         });
         gtk.bindProperties(self, ZvImageWindow, &.{
             "fullscreened",
@@ -26,10 +27,14 @@ pub const ZvImageWindow = extern struct {
     stack: *gtk.GtkStack,
     status_page: *gtk.AdwStatusPage,
     image_book: *image_book.ZvImageBook,
+    drop_target: *gtk.GtkDropTarget,
     fullscreened: bool,
 
     pub fn init(self: *ZvImageWindow) callconv(.c) void {
         gtk.gtk_widget_init_template(@ptrCast(self));
+
+        var types = [_]gtk.GType{gtk.g_file_get_type()};
+        gtk.gtk_drop_target_set_gtypes(self.drop_target, &types, types.len);
     }
 
     fn onWinOpen(self: *ZvImageWindow, _: [*c]const gtk.gchar) callconv(.c) void {
