@@ -255,7 +255,15 @@ fn snakeToCamel(comptime name: []const u8) []const u8 {
 }
 
 fn camelToSnake(comptime name: []const u8) []const u8 {
-    var res = std.mem.zeroes([2 * name.len]u8);
+    var sz = 0;
+    for (name) |ch| {
+        sz += 1;
+        if (std.ascii.isUpper(ch)) {
+            sz += 1;
+        }
+    }
+
+    var res = std.mem.zeroes([sz]u8);
     var ii = 0;
     var i = 0;
 

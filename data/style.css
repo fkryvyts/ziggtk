@@ -13,3 +13,11 @@
 .zoom-box {
     margin: 6px;
 }
+
+.zv_drag_overlay .overlay-status {
+    color: #eb6030;
+    background-color: alpha(#eb6030, 0.08);
+    border: 2px dashed alpha(#eb6030, 0.35);
+    border-radius: 2px;
+    margin: 12px;
+}

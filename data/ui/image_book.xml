@@ -104,11 +104,6 @@
                   <class name="flat" />
                 </style>
                 <property name="popover">
-                  <!--
-                    Use manual implementation instead of GtkPopoverMenu because:
-                    1. We need to specify the shortcuts manually since called from the menu the zoom does not aim for the cursor.
-                    2. Hovering other menu entries would steal the focus from the GtkEntry.
-                  -->
                   <object class="GtkPopover">
                     <property name="default-widget">submit_zoom</property>
                     <style>
