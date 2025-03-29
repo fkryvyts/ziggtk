@@ -142,7 +142,7 @@ fn propertiesBinder(comptime widget_type: type, comptime props: []const []const 
                     },
                     else => {
                         const tn = comptime builtinWidgetTypeName(@FieldType(widget_type, props[i]));
-                        installObjectProp(widget_class, property_id, props[i], @field(c, camelToSname(tn) ++ "_get_type")());
+                        installObjectProp(widget_class, property_id, props[i], @field(c, camelToSnake(tn) ++ "_get_type")());
                     },
                 }
             }
@@ -161,10 +161,10 @@ fn propertiesBinder(comptime widget_type: type, comptime props: []const []const 
                         },
                     }
 
-                    const call_name = comptime snakeToCamel(props[i]);
-                    if (@hasDecl(widget_type, "onSetProperty" ++ call_name)) {
-                        @field(widget_type, "onSetProperty" ++ call_name)(self);
-                    }
+                    // const call_name = comptime snakeToCamel(props[i]);
+                    // if (@hasDecl(widget_type, "onSetProperty" ++ call_name)) {
+                    //     @field(widget_type, "onSetProperty" ++ call_name)(self);
+                    // }
 
                     return;
                 }
@@ -254,7 +254,7 @@ fn snakeToCamel(comptime name: []const u8) []const u8 {
     return res[0..ii];
 }
 
-fn camelToSname(comptime name: []const u8) []const u8 {
+fn camelToSnake(comptime name: []const u8) []const u8 {
     var res = std.mem.zeroes([2 * name.len]u8);
     var ii = 0;
     var i = 0;
