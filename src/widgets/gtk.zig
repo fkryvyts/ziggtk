@@ -156,7 +156,8 @@ fn propertiesBinder(comptime widget_type: type, comptime props: []const []const 
                             @field(self, props[i]) = c.g_value_get_boolean(val) > 0;
                         },
                         else => {
-                            @field(self, props[i]) = @ptrCast(c.g_value_get_object(val));
+                            const p = c.g_value_get_object(val);
+                            @field(self, props[i]) = @ptrCast(@alignCast(p));
                         },
                     }
 

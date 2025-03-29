@@ -4,10 +4,11 @@
     <style>
       <class name="zv_drag_overlay" />
     </style>
-    <property name="child">
+    <child>
       <object class="GtkOverlay" id="overlay">
         <child type="overlay">
           <object class="GtkRevealer" id="revealer">
+            <property name="transition-type">crossfade</property>
             <property name="child">
               <object class="AdwBin">
                 <style>
@@ -27,6 +28,6 @@
           </object>
         </child>
       </object>
-    </property>
+    </child>
   </template>
 </interface>
