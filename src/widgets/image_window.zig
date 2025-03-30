@@ -35,6 +35,7 @@ pub const ZvImageWindow = extern struct {
 
         var types = [_]gtk.GType{gtk.g_file_get_type()};
         gtk.gtk_drop_target_set_gtypes(self.drop_target, &types, types.len);
+        gtk.signalConnect(self.drop_target, "drop", @ptrCast(&ZvImageWindow.onFileDrop), self);
     }
 
     fn onWinOpen(self: *ZvImageWindow, _: [*c]const gtk.gchar) callconv(.c) void {
@@ -85,6 +86,19 @@ pub const ZvImageWindow = extern struct {
 
         self.image_book.loadImage(std.mem.span(filepath));
         gtk.gtk_stack_set_visible_child(self.stack, @ptrCast(self.image_book));
+    }
+
+    fn onFileDrop(_: *gtk.GtkDropTarget, val: *gtk.GValue, _: f64, _: f64, self: *ZvImageWindow) callconv(.c) gtk.gboolean {
+        const p = gtk.g_value_get_object(val) orelse return 0;
+        const file: *gtk.GFile = @ptrCast(@alignCast(p));
+
+        const filepath = gtk.g_file_get_path(file);
+        defer gtk.g_free(filepath);
+
+        self.image_book.loadImage(std.mem.span(filepath));
+        gtk.gtk_stack_set_visible_child(self.stack, @ptrCast(self.image_book));
+
+        return 1;
     }
 };
 
