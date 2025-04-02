@@ -8,11 +8,11 @@ const properties_view = @import("properties_view.zig");
 const drag_overlay = @import("drag_overlay.zig");
 const shy_bin = @import("shy_bin.zig");
 const image_window = @import("image_window.zig");
+const loader = @import("../decoders/loader.zig");
 
 var application: ?*gtk.GApplication = null;
 var img_window: ?*image_window.ZvImageWindow = null;
 var err_dialog: ?*error_details.ZvErrorDetails = null;
-var img_book: ?*image_book.ZvImageBook = null;
 
 pub fn runApp() !void {
     gtk.adw_init();
@@ -33,8 +33,8 @@ pub fn runApp() !void {
     img_window = w;
     err_dialog = dg;
 
-    const thread = try std.Thread.spawn(.{}, loadImage, .{});
-    defer thread.join();
+    try loader.default_loader.init(std.heap.page_allocator);
+    defer loader.default_loader.deinit();
 
     _ = gtk.g_application_run(app, 0, null);
 }
@@ -60,9 +60,4 @@ fn onAppActivate() callconv(.c) void {
     //gtk.adw_dialog_present(@ptrCast(dg), null);
 
     std.debug.print("Activated", .{});
-}
-
-fn loadImage() !void {
-    const ib = img_book orelse return;
-    ib.loadImage("/home/fedir/Downloads/image.jpg");
 }

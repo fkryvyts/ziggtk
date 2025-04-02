@@ -2,6 +2,7 @@ const std = @import("std");
 const gtk = @import("gtk.zig");
 const image_view = @import("image_view.zig");
 const errors = @import("errors.zig");
+const loader = @import("../decoders/loader.zig");
 
 pub const ZvImagePageClass = extern struct {
     parent_class: gtk.AdwBinClass,
@@ -42,12 +43,12 @@ pub const ZvImagePage = extern struct {
 
     pub fn loadImage(self: *ZvImagePage, path: []const u8) void {
         gtk.gtk_stack_set_visible_child(self.stack, self.spinner_page);
+        loader.default_loader.loadImage(path, @ptrCast(&ZvImagePage.onImageLoad), self) catch return;
+    }
 
-        var err: [*c]gtk.GError = null;
-        const image_texture = gtk.gdk_texture_new_from_filename(path.ptr, &err);
-
-        if (err != null) {
-            gtk.printAndCleanError(&err, "Failed to load image");
+    // No need to define it as callconv(.c) since it is called from Zig
+    fn onImageLoad(self: *ZvImagePage, image_texture: ?*gtk.GdkTexture) void {
+        if (image_texture == null) {
             gtk.gtk_stack_set_visible_child(self.stack, self.error_page);
             return;
         }
