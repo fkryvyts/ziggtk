@@ -6,12 +6,23 @@ pub const ZvImageViewClass = extern struct {
     parent_class: gtk.GtkWidgetClass,
 
     pub fn init(self: *ZvImageViewClass) callconv(.c) void {
+        gtk.bindProperties(self, ZvImageView, &.{
+            "hadjustment",
+            "vadjustment",
+            "vscroll_policy",
+            "hscroll_policy",
+        });
+
         self.parent_class.snapshot = @ptrCast(&ZvImageView.onSnapshot);
     }
 };
 
 pub const ZvImageView = extern struct {
     parent_instance: gtk.GtkWidget,
+    hadjustment: ?*gtk.GtkAdjustment,
+    vadjustment: ?*gtk.GtkAdjustment,
+    vscroll_policy: gtk.GtkScrollablePolicyEnum,
+    hscroll_policy: gtk.GtkScrollablePolicyEnum,
     image_texture: ?*gtk.GdkTexture,
 
     pub fn init(_: *ZvImageView) callconv(.c) void {}
@@ -25,7 +36,7 @@ pub const ZvImageView = extern struct {
         self.image_texture = image_texture;
     }
 
-    pub fn onSnapshot(self: *ZvImageView, snapshot: *gtk.GtkSnapshot) callconv(.c) void {
+    fn onSnapshot(self: *ZvImageView, snapshot: *gtk.GtkSnapshot) callconv(.c) void {
         if (self.image_texture == null) {
             return;
         }
@@ -40,5 +51,7 @@ pub const ZvImageView = extern struct {
 };
 
 pub fn registerType() gtk.GType {
-    return gtk.registerType(gtk.gtk_widget_get_type(), ZvImageView, ZvImageViewClass);
+    const t = gtk.registerType(gtk.gtk_widget_get_type(), ZvImageView, ZvImageViewClass);
+    gtk.g_type_add_interface_static(t, gtk.gtk_scrollable_get_type(), &.{});
+    return t;
 }

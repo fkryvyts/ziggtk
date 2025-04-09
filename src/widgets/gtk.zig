@@ -14,6 +14,11 @@ const errors = @import("errors.zig");
 const resource_prefix = "/com/github/fkryvyts/Ziggtk/";
 const application_id = "com.github.fkryvyts.Ziggtk";
 
+pub const GtkScrollablePolicyEnum = enum(c_int) {
+    MINIMUM = c.GTK_SCROLL_MINIMUM,
+    NATURAL = c.GTK_SCROLL_NATURAL,
+};
+
 pub fn installResources(comptime resource_path: []const u8) !void {
     const res_data = @embedFile(resource_path);
 
@@ -140,6 +145,9 @@ fn propertiesBinder(comptime widget_type: type, comptime props: []const []const 
                     bool => {
                         installBoolProp(widget_class, property_id, props[i]);
                     },
+                    GtkScrollablePolicyEnum => {
+                        installEnumProp(widget_class, property_id, props[i], c.gtk_scrollable_policy_get_type());
+                    },
                     else => {
                         const tn = comptime builtinWidgetTypeName(@FieldType(widget_type, props[i]));
                         installObjectProp(widget_class, property_id, props[i], @field(c, camelToSnake(tn) ++ "_get_type")());
@@ -154,6 +162,9 @@ fn propertiesBinder(comptime widget_type: type, comptime props: []const []const 
                     switch (@FieldType(widget_type, props[i])) {
                         bool => {
                             @field(self, props[i]) = c.g_value_get_boolean(val) > 0;
+                        },
+                        GtkScrollablePolicyEnum => {
+                            @field(self, props[i]) = @enumFromInt(c.g_value_get_enum(val));
                         },
                         else => {
                             const p = c.g_value_get_object(val);
@@ -178,6 +189,9 @@ fn propertiesBinder(comptime widget_type: type, comptime props: []const []const 
                         bool => {
                             c.g_value_set_boolean(val, @intFromBool(@field(self, props[i])));
                         },
+                        GtkScrollablePolicyEnum => {
+                            c.g_value_set_enum(val, @intFromEnum((@field(self, props[i]))));
+                        },
                         else => {
                             c.g_value_set_object(val, @ptrCast(@field(self, props[i])));
                         },
@@ -192,6 +206,12 @@ fn propertiesBinder(comptime widget_type: type, comptime props: []const []const 
 
 fn installBoolProp(widget_class: anytype, property_id: c.guint, name: []const u8) void {
     const spec = c.g_param_spec_boolean(name.ptr, null, null, 0, c.G_PARAM_READWRITE);
+    defer c.g_param_spec_unref(spec);
+    c.g_object_class_install_property(@ptrCast(widget_class), property_id, spec);
+}
+
+fn installEnumProp(widget_class: anytype, property_id: c.guint, name: []const u8, enum_type: c.GType) void {
+    const spec = c.g_param_spec_enum(name.ptr, null, null, enum_type, 0, c.G_PARAM_READWRITE);
     defer c.g_param_spec_unref(spec);
     c.g_object_class_install_property(@ptrCast(widget_class), property_id, spec);
 }

@@ -20,6 +20,9 @@ pub fn runApp() !void {
 
     try gtk.installResources("resources/gresources.gresource");
 
+    try loader.default_loader.init(std.heap.page_allocator);
+    defer loader.default_loader.deinit();
+
     const b = try gtk.newBuilder("ui/builder.xml");
     defer gtk.g_object_unref(b);
 
@@ -32,9 +35,6 @@ pub fn runApp() !void {
     application = app;
     img_window = w;
     err_dialog = dg;
-
-    try loader.default_loader.init(std.heap.page_allocator);
-    defer loader.default_loader.deinit();
 
     _ = gtk.g_application_run(app, 0, null);
 }
