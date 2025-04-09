@@ -39,7 +39,7 @@
   <template class="ZvImagePage" parent="AdwBin">
     <property name="hexpand">True</property>
     <property name="vexpand">True</property>
-    <property name="child">
+    <child>
       <object class="GtkStack" id="stack">
         <property name="visible-child">spinner_page</property>
         <property name="transition-type">crossfade</property>
@@ -101,7 +101,7 @@
               <object class="GtkScrolledWindow" id="scrolled_window">
                 <property name="propagate-natural-height">True</property>
                 <property name="propagate-natural-width">True</property>
-                <property name="child">
+                <child>
                   <object class="ZvImageView" id="image_view">
                     <property name="hexpand">true</property>
                     <property name="vexpand">true</property>
@@ -120,7 +120,7 @@
                       </object>
                     </child>
                   </object>
-                </property>
+                </child>
               </object>
             </child>
             <child>
@@ -153,6 +153,6 @@
           </object>
         </child>
       </object>
-    </property>
+    </child>
   </template>
 </interface>

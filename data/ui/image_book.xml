@@ -4,7 +4,7 @@
     <property name="css-name">imageview</property>
     <property name="focusable">True</property>
     <property name="focus-on-click">True</property>
-    <property name="child">
+    <child>
       <object class="GtkOverlay" id="bin_child">
         <property name="hexpand">True</property>
         <child>
@@ -109,7 +109,7 @@
                     <style>
                       <class name="menu" />
                     </style>
-                    <property name="child">
+                    <child>
                       <object class="GtkBox">
                         <property name="orientation">vertical</property>
                         <property name="spacing">6</property>
@@ -120,7 +120,7 @@
                           <object class="GtkListBox" id="zoom_to_list">
                             <child>
                               <object class="GtkListBoxRow" id="zoom_to_300">
-                                <property name="child">
+                                <child>
                                   <object class="GtkBox">
                                     <child>
                                       <object class="GtkLabel">
@@ -139,12 +139,12 @@
                                       </object>
                                     </child>
                                   </object>
-                                </property>
+                                </child>
                               </object>
                             </child>
                             <child>
                               <object class="GtkListBoxRow" id="zoom_to_200">
-                                <property name="child">
+                                <child>
                                   <object class="GtkBox">
                                     <child>
                                       <object class="GtkLabel">
@@ -163,12 +163,12 @@
                                       </object>
                                     </child>
                                   </object>
-                                </property>
+                                </child>
                               </object>
                             </child>
                             <child>
                               <object class="GtkListBoxRow" id="zoom_to_100">
-                                <property name="child">
+                                <child>
                                   <object class="GtkBox">
                                     <child>
                                       <object class="GtkLabel">
@@ -187,27 +187,27 @@
                                       </object>
                                     </child>
                                   </object>
-                                </property>
+                                </child>
                               </object>
                             </child>
                             <child>
                               <object class="GtkListBoxRow" id="zoom_to_66">
-                                <property name="child">
+                                <child>
                                   <object class="GtkLabel">
                                     <property name="halign">start</property>
                                     <property name="label">66 %</property>
                                   </object>
-                                </property>
+                                </child>
                               </object>
                             </child>
                             <child>
                               <object class="GtkListBoxRow" id="zoom_to_50">
-                                <property name="child">
+                                <child>
                                   <object class="GtkLabel">
                                     <property name="halign">start</property>
                                     <property name="label">50 %</property>
                                   </object>
-                                </property>
+                                </child>
                               </object>
                             </child>
                           </object>
@@ -236,7 +236,7 @@
                           </object>
                         </child>
                       </object>
-                    </property>
+                    </child>
                   </object>
                 </property>
               </object>
@@ -247,7 +247,7 @@
           </object>
         </child>
       </object>
-    </property>
+    </child>
     <style>
       <class name="image-view" />
     </style>

@@ -7,7 +7,7 @@
     <style>
       <class name="error-details" />
     </style>
-    <property name="child">
+    <child>
       <object class="AdwToolbarView">
         <child type="top">
           <object class="AdwHeaderBar" />
@@ -72,6 +72,6 @@
           </object>
         </child>
       </object>
-    </property>
+    </child>
   </template>
 </interface>

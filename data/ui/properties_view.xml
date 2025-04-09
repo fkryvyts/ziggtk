@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
   <template class="ZvPropertiesView" parent="AdwBin">
-    <property name="child">
+    <child>
       <object class="GtkScrolledWindow">
         <property name="propagate-natural-height">True</property>
         <property name="max-content-height">316</property>
-        <property name="child">
+        <child>
           <object class="GtkBox">
             <property name="orientation">vertical</property>
             <property name="spacing">24</property>
@@ -217,8 +217,8 @@
               </object>
             </child>
           </object>
-        </property>
+        </child>
       </object>
-    </property>
+    </child>
   </template>
 </interface>

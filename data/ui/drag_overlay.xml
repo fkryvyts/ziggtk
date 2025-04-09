@@ -9,12 +9,12 @@
         <child type="overlay">
           <object class="GtkRevealer" id="revealer">
             <property name="transition-type">crossfade</property>
-            <property name="child">
+            <child>
               <object class="AdwBin">
                 <style>
                   <class name="background" />
                 </style>
-                <property name="child">
+                <child>
                   <object class="AdwStatusPage">
                     <property name="title" translatable="yes">Drop Image to View</property>
                     <property name="icon-name">image-round-symbolic</property>
@@ -22,9 +22,9 @@
                       <class name="overlay-status" />
                     </style>
                   </object>
-                </property>
+                </child>
               </object>
-            </property>
+            </child>
           </object>
         </child>
       </object>
