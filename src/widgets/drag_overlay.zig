@@ -21,8 +21,8 @@ pub const ZvDragOverlay = extern struct {
     parent_instance: gtk.AdwBin,
     overlay: *gtk.GtkOverlay,
     revealer: *gtk.GtkRevealer,
-    drop_target: *gtk.GtkDropTarget,
-    content: *gtk.GtkWidget,
+    drop_target: ?*gtk.GtkDropTarget,
+    content: ?*gtk.GtkWidget,
 
     pub fn init(self: *ZvDragOverlay) callconv(.c) void {
         gtk.gtk_widget_init_template(@ptrCast(self));

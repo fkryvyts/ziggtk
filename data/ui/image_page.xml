@@ -105,6 +105,7 @@
                   <object class="ZvImageView" id="image_view">
                     <property name="hexpand">true</property>
                     <property name="vexpand">true</property>
+                    <property name="overflow">GTK_OVERFLOW_HIDDEN</property>
                     <style>
                       <class name="zv_image_view" />
                     </style>

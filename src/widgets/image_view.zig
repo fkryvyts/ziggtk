@@ -2,6 +2,8 @@ const std = @import("std");
 const gtk = @import("gtk.zig");
 const errors = @import("errors.zig");
 
+const background_color = gtk.GdkRGBA{ .red = 34 / 255, .green = 34 / 255, .blue = 38 / 255, .alpha = 1 };
+
 pub const ZvImageViewClass = extern struct {
     parent_class: gtk.GtkWidgetClass,
 
@@ -25,7 +27,10 @@ pub const ZvImageView = extern struct {
     hscroll_policy: gtk.GtkScrollablePolicyEnum,
     image_texture: ?*gtk.GdkTexture,
 
-    pub fn init(_: *ZvImageView) callconv(.c) void {}
+    pub fn init(self: *ZvImageView) callconv(.c) void {
+        gtk.signalConnect(self, "notify::hadjustment", @ptrCast(&ZvImageView.onNotifyHadjustment), null);
+        gtk.signalConnect(self, "notify::vadjustment", @ptrCast(&ZvImageView.onNotifyVadjustment), null);
+    }
 
     pub fn setImageTexture(self: *ZvImageView, image_texture: ?*gtk.GdkTexture) void {
         if (self.image_texture != null) {
@@ -34,6 +39,30 @@ pub const ZvImageView = extern struct {
 
         _ = gtk.g_object_ref(@ptrCast(image_texture));
         self.image_texture = image_texture;
+
+        self.configureAjustments();
+    }
+
+    fn onNotifyHadjustment(self: *ZvImageView) callconv(.c) void {
+        gtk.signalConnect(self.hadjustment, "value-changed", @ptrCast(&ZvImageView.onAdjustmentValueChanged), self);
+    }
+
+    fn onNotifyVadjustment(self: *ZvImageView) callconv(.c) void {
+        gtk.signalConnect(self.vadjustment, "value-changed", @ptrCast(&ZvImageView.onAdjustmentValueChanged), self);
+    }
+
+    fn onAdjustmentValueChanged(_: *gtk.GtkAdjustment, self: *ZvImageView) callconv(.c) void {
+        gtk.gtk_widget_queue_draw(@ptrCast(self));
+    }
+
+    fn configureAjustments(self: *ZvImageView) void {
+        const widget_width: f64 = @floatFromInt(gtk.gtk_widget_get_width(@ptrCast(self)));
+        const widget_height: f64 = @floatFromInt(gtk.gtk_widget_get_height(@ptrCast(self)));
+        const img_width: f64 = @floatFromInt(gtk.gdk_texture_get_width(self.image_texture));
+        const img_height: f64 = @floatFromInt(gtk.gdk_texture_get_width(self.image_texture));
+
+        gtk.gtk_adjustment_configure(self.hadjustment, gtk.gtk_adjustment_get_value(self.hadjustment), 0, img_width, widget_width * 0.1, widget_width * 0.9, @min(widget_width, img_width));
+        gtk.gtk_adjustment_configure(self.vadjustment, gtk.gtk_adjustment_get_value(self.vadjustment), 0, img_height, widget_height * 0.1, widget_height * 0.9, @min(widget_height, img_height));
     }
 
     fn onSnapshot(self: *ZvImageView, snapshot: *gtk.GtkSnapshot) callconv(.c) void {
@@ -41,12 +70,32 @@ pub const ZvImageView = extern struct {
             return;
         }
 
-        const w: f32 = @floatFromInt(gtk.gtk_widget_get_width(@ptrCast(self)));
-        const h: f32 = @floatFromInt(gtk.gtk_widget_get_height(@ptrCast(self)));
+        const widget_width: f32 = @floatFromInt(gtk.gtk_widget_get_width(@ptrCast(self)));
+        const widget_height: f32 = @floatFromInt(gtk.gtk_widget_get_height(@ptrCast(self)));
+        const img_width: f32 = @floatFromInt(gtk.gdk_texture_get_width(self.image_texture));
+        const img_height: f32 = @floatFromInt(gtk.gdk_texture_get_width(self.image_texture));
 
-        var rect = std.mem.zeroes(gtk.graphene_rect_t);
-        _ = gtk.graphene_rect_init(&rect, 0, 0, w, h);
-        gtk.gtk_snapshot_append_texture(snapshot, self.image_texture, &rect);
+        const widget_rect = gtk.graphene_rect_t{ .size = .{
+            .width = widget_width,
+            .height = widget_height,
+        } };
+
+        gtk.gtk_snapshot_append_color(snapshot, &background_color, &widget_rect);
+
+        const hvalue = gtk.gtk_adjustment_get_value(self.hadjustment);
+        const hupper = gtk.gtk_adjustment_get_upper(self.hadjustment);
+        gtk.gtk_snapshot_translate(snapshot, &.{ .x = @floatCast(-(hvalue - (hupper - img_width) / 2)) });
+
+        const vvalue = gtk.gtk_adjustment_get_value(self.vadjustment);
+        const vupper = gtk.gtk_adjustment_get_upper(self.vadjustment);
+        gtk.gtk_snapshot_translate(snapshot, &.{ .y = @floatCast(-(vvalue - (vupper - img_height) / 2)) });
+
+        const img_rect = gtk.graphene_rect_t{ .size = .{
+            .width = img_width,
+            .height = img_height,
+        } };
+
+        gtk.gtk_snapshot_append_texture(snapshot, self.image_texture, &img_rect);
     }
 };
 
