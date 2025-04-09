@@ -55,6 +55,8 @@
                   <object class="GtkSpinner" id="spinner">
                     <property name="halign">center</property>
                     <property name="valign">center</property>
+                    <property name="width-request">150</property>
+                    <property name="height-request">150</property>
                     <property name="spinning">True</property>
                   </object>
                 </child>
