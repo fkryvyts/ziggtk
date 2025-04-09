@@ -15,6 +15,7 @@ pub const ZvImageViewClass = extern struct {
             "hscroll_policy",
         });
 
+        self.parent_class.size_allocate = @ptrCast(&ZvImageView.onSizeAllocate);
         self.parent_class.snapshot = @ptrCast(&ZvImageView.onSnapshot);
     }
 };
@@ -58,11 +59,22 @@ pub const ZvImageView = extern struct {
     fn configureAjustments(self: *ZvImageView) void {
         const widget_width: f64 = @floatFromInt(gtk.gtk_widget_get_width(@ptrCast(self)));
         const widget_height: f64 = @floatFromInt(gtk.gtk_widget_get_height(@ptrCast(self)));
+
+        if ((self.image_texture == null) or (widget_width == 0) or (widget_height == 0)) {
+            return;
+        }
+
         const img_width: f64 = @floatFromInt(gtk.gdk_texture_get_width(self.image_texture));
         const img_height: f64 = @floatFromInt(gtk.gdk_texture_get_width(self.image_texture));
+        const hvalue = gtk.gtk_adjustment_get_value(self.hadjustment);
+        const vvalue = gtk.gtk_adjustment_get_value(self.vadjustment);
 
-        gtk.gtk_adjustment_configure(self.hadjustment, gtk.gtk_adjustment_get_value(self.hadjustment), 0, img_width, widget_width * 0.1, widget_width * 0.9, @min(widget_width, img_width));
-        gtk.gtk_adjustment_configure(self.vadjustment, gtk.gtk_adjustment_get_value(self.vadjustment), 0, img_height, widget_height * 0.1, widget_height * 0.9, @min(widget_height, img_height));
+        gtk.gtk_adjustment_configure(self.hadjustment, @min(hvalue, img_width), 0, img_width, widget_width * 0.1, widget_width * 0.9, @min(widget_width, img_width));
+        gtk.gtk_adjustment_configure(self.vadjustment, @min(vvalue, img_height), 0, img_height, widget_height * 0.1, widget_height * 0.9, @min(widget_height, img_height));
+    }
+
+    fn onSizeAllocate(self: *ZvImageView, _: c_int, _: c_int, _: c_int) callconv(.c) void {
+        self.configureAjustments();
     }
 
     fn onSnapshot(self: *ZvImageView, snapshot: *gtk.GtkSnapshot) callconv(.c) void {
