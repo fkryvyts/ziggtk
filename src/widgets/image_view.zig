@@ -87,13 +87,13 @@ pub const ZvImageView = extern struct {
         const img_width: f32 = @floatFromInt(gtk.gdk_texture_get_width(self.image_texture));
         const img_height: f32 = @floatFromInt(gtk.gdk_texture_get_width(self.image_texture));
 
-        const widget_rect = gtk.graphene_rect_t{ .size = .{
+        // Background
+        gtk.gtk_snapshot_append_color(snapshot, &background_color, &.{ .size = .{
             .width = widget_width,
             .height = widget_height,
-        } };
+        } });
 
-        gtk.gtk_snapshot_append_color(snapshot, &background_color, &widget_rect);
-
+        // Scroll bars
         const hvalue = gtk.gtk_adjustment_get_value(self.hadjustment);
         const hupper = gtk.gtk_adjustment_get_upper(self.hadjustment);
         gtk.gtk_snapshot_translate(snapshot, &.{ .x = @floatCast(-(hvalue - (hupper - img_width) / 2)) });
@@ -102,12 +102,17 @@ pub const ZvImageView = extern struct {
         const vupper = gtk.gtk_adjustment_get_upper(self.vadjustment);
         gtk.gtk_snapshot_translate(snapshot, &.{ .y = @floatCast(-(vvalue - (vupper - img_height) / 2)) });
 
-        const img_rect = gtk.graphene_rect_t{ .size = .{
+        // Center the image if it is too small
+        const rendering_x = @max((widget_width - img_width) / 2, 0);
+        const rendering_y = @max((widget_height - img_height) / 2, 0);
+
+        gtk.gtk_snapshot_translate(snapshot, &.{ .x = @floatCast(rendering_x), .y = @floatCast(rendering_y) });
+
+        // Actual image
+        gtk.gtk_snapshot_append_texture(snapshot, self.image_texture, &.{ .size = .{
             .width = img_width,
             .height = img_height,
-        } };
-
-        gtk.gtk_snapshot_append_texture(snapshot, self.image_texture, &img_rect);
+        } });
     }
 };
 
