@@ -25,8 +25,8 @@ pub const ZvImageBook = extern struct {
         gtk.gtk_widget_init_template(@ptrCast(self));
     }
 
-    pub fn loadImage(self: *ZvImageBook, path: []const u8) void {
-        self.image_page.loadImage(path);
+    pub fn currentPage(self: *ZvImageBook) *image_page.ZvImagePage {
+        return self.image_page;
     }
 };
 

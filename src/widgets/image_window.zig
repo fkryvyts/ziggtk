@@ -1,6 +1,7 @@
 const std = @import("std");
 const gtk = @import("gtk.zig");
 const image_book = @import("image_book.zig");
+const error_details = @import("error_details.zig");
 
 pub const ZvImageWindowClass = extern struct {
     parent_class: gtk.AdwApplicationWindowClass,
@@ -12,11 +13,14 @@ pub const ZvImageWindowClass = extern struct {
             "status_page",
             "image_book",
             "drop_target",
+            "error_details",
         });
         gtk.bindProperties(self, ZvImageWindow, &.{
             "fullscreened",
         });
         gtk.bindActions(self, &.{
+            .{ .n = "win.error_more_info", .f = @ptrCast(&ZvImageWindow.onWinErrorMoreInfo) },
+            .{ .n = "win.reload", .f = @ptrCast(&ZvImageWindow.onWinReload) },
             .{ .n = "win.open", .f = @ptrCast(&ZvImageWindow.onWinOpen) },
         });
     }
@@ -28,6 +32,7 @@ pub const ZvImageWindow = extern struct {
     status_page: *gtk.AdwStatusPage,
     image_book: *image_book.ZvImageBook,
     drop_target: *gtk.GtkDropTarget,
+    error_details: *error_details.ZvErrorDetails,
     fullscreened: bool,
 
     pub fn init(self: *ZvImageWindow) callconv(.c) void {
@@ -36,6 +41,14 @@ pub const ZvImageWindow = extern struct {
         var types = [_]gtk.GType{gtk.g_file_get_type()};
         gtk.gtk_drop_target_set_gtypes(self.drop_target, &types, types.len);
         gtk.signalConnect(self.drop_target, "drop", @ptrCast(&ZvImageWindow.onFileDrop), self);
+    }
+
+    fn onWinErrorMoreInfo(self: *ZvImageWindow, _: [*c]const gtk.gchar) callconv(.c) void {
+        self.error_details.present(self.image_book.currentPage().getImageError(), @ptrCast(self));
+    }
+
+    fn onWinReload(self: *ZvImageWindow, _: [*c]const gtk.gchar) callconv(.c) void {
+        self.image_book.currentPage().reloadImage();
     }
 
     fn onWinOpen(self: *ZvImageWindow, _: [*c]const gtk.gchar) callconv(.c) void {
@@ -84,7 +97,7 @@ pub const ZvImageWindow = extern struct {
         const filepath = gtk.g_file_get_path(file);
         defer gtk.g_free(filepath);
 
-        self.image_book.loadImage(std.mem.span(filepath));
+        self.image_book.currentPage().loadImage(std.mem.span(filepath));
         gtk.gtk_stack_set_visible_child(self.stack, @ptrCast(self.image_book));
     }
 
@@ -95,7 +108,7 @@ pub const ZvImageWindow = extern struct {
         const filepath = gtk.g_file_get_path(file);
         defer gtk.g_free(filepath);
 
-        self.image_book.loadImage(std.mem.span(filepath));
+        self.image_book.currentPage().loadImage(std.mem.span(filepath));
         gtk.gtk_stack_set_visible_child(self.stack, @ptrCast(self.image_book));
 
         return 1;

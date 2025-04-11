@@ -1,6 +1,7 @@
 const std = @import("std");
 const gtk = @import("gtk.zig");
 const errors = @import("errors.zig");
+const loader = @import("../decoders/loader.zig");
 
 const background_color = gtk.GdkRGBA{ .red = 34 / 255, .green = 34 / 255, .blue = 38 / 255, .alpha = 1 };
 
@@ -26,21 +27,19 @@ pub const ZvImageView = extern struct {
     vadjustment: ?*gtk.GtkAdjustment,
     vscroll_policy: gtk.GtkScrollablePolicyEnum,
     hscroll_policy: gtk.GtkScrollablePolicyEnum,
-    image_texture: ?*gtk.GdkTexture,
+    image: ?*loader.Image,
 
     pub fn init(self: *ZvImageView) callconv(.c) void {
         gtk.signalConnect(self, "notify::hadjustment", @ptrCast(&ZvImageView.onNotifyHadjustment), null);
         gtk.signalConnect(self, "notify::vadjustment", @ptrCast(&ZvImageView.onNotifyVadjustment), null);
     }
 
-    pub fn setImageTexture(self: *ZvImageView, image_texture: ?*gtk.GdkTexture) void {
-        if (self.image_texture != null) {
-            gtk.g_object_unref(self.image_texture);
+    pub fn setImage(self: *ZvImageView, image: ?*loader.Image) void {
+        if (self.image) |img| {
+            img.destroy();
         }
 
-        _ = gtk.g_object_ref(@ptrCast(image_texture));
-        self.image_texture = image_texture;
-
+        self.image = image;
         self.configureAjustments();
     }
 
@@ -57,17 +56,17 @@ pub const ZvImageView = extern struct {
     }
 
     fn configureAjustments(self: *ZvImageView) void {
+        const img = self.image orelse return;
+        const img_width: f64 = img.width();
+        const img_height: f64 = img.height();
         const widget_width: f64 = @floatFromInt(gtk.gtk_widget_get_width(@ptrCast(self)));
         const widget_height: f64 = @floatFromInt(gtk.gtk_widget_get_height(@ptrCast(self)));
-
-        if ((self.image_texture == null) or (widget_width == 0) or (widget_height == 0)) {
-            return;
-        }
-
-        const img_width: f64 = @floatFromInt(gtk.gdk_texture_get_width(self.image_texture));
-        const img_height: f64 = @floatFromInt(gtk.gdk_texture_get_width(self.image_texture));
         const hvalue = gtk.gtk_adjustment_get_value(self.hadjustment);
         const vvalue = gtk.gtk_adjustment_get_value(self.vadjustment);
+
+        if ((widget_width == 0) or (widget_height == 0)) {
+            return;
+        }
 
         gtk.gtk_adjustment_configure(self.hadjustment, @min(hvalue, img_width), 0, img_width, widget_width * 0.1, widget_width * 0.9, @min(widget_width, img_width));
         gtk.gtk_adjustment_configure(self.vadjustment, @min(vvalue, img_height), 0, img_height, widget_height * 0.1, widget_height * 0.9, @min(widget_height, img_height));
@@ -78,14 +77,11 @@ pub const ZvImageView = extern struct {
     }
 
     fn onSnapshot(self: *ZvImageView, snapshot: *gtk.GtkSnapshot) callconv(.c) void {
-        if (self.image_texture == null) {
-            return;
-        }
-
+        const img = self.image orelse return;
+        const img_width: f32 = img.width();
+        const img_height: f32 = img.height();
         const widget_width: f32 = @floatFromInt(gtk.gtk_widget_get_width(@ptrCast(self)));
         const widget_height: f32 = @floatFromInt(gtk.gtk_widget_get_height(@ptrCast(self)));
-        const img_width: f32 = @floatFromInt(gtk.gdk_texture_get_width(self.image_texture));
-        const img_height: f32 = @floatFromInt(gtk.gdk_texture_get_width(self.image_texture));
 
         // Background
         gtk.gtk_snapshot_append_color(snapshot, &background_color, &.{ .size = .{
@@ -109,7 +105,7 @@ pub const ZvImageView = extern struct {
         gtk.gtk_snapshot_translate(snapshot, &.{ .x = @floatCast(rendering_x), .y = @floatCast(rendering_y) });
 
         // Actual image
-        gtk.gtk_snapshot_append_texture(snapshot, self.image_texture, &.{ .size = .{
+        gtk.gtk_snapshot_append_texture(snapshot, img.image_texture, &.{ .size = .{
             .width = img_width,
             .height = img_height,
         } });

@@ -12,7 +12,6 @@ const loader = @import("../decoders/loader.zig");
 
 var application: ?*gtk.GApplication = null;
 var img_window: ?*image_window.ZvImageWindow = null;
-var err_dialog: ?*error_details.ZvErrorDetails = null;
 
 pub fn runApp() !void {
     gtk.adw_init();
@@ -28,13 +27,11 @@ pub fn runApp() !void {
 
     const app = try gtk.newApplication();
     const w: *image_window.ZvImageWindow = @ptrCast(try gtk.getBuilderObject(b, "image_window"));
-    const dg: *error_details.ZvErrorDetails = @ptrCast(try gtk.getBuilderObject(b, "error_details"));
 
     gtk.signalConnect(app, "activate", &onAppActivate, null);
 
     application = app;
     img_window = w;
-    err_dialog = dg;
 
     _ = gtk.g_application_run(app, 0, null);
 }
@@ -53,11 +50,9 @@ fn registerTypes() void {
 fn onAppActivate() callconv(.c) void {
     const app = application orelse return;
     const w = img_window orelse return;
-    //const dg = err_dialog orelse return;
 
     gtk.gtk_window_set_application(@ptrCast(w), @ptrCast(app));
     gtk.gtk_window_present(@ptrCast(w));
-    //gtk.adw_dialog_present(@ptrCast(dg), null);
 
     std.debug.print("Activated", .{});
 }

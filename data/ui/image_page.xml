@@ -75,6 +75,7 @@
                 <property name="halign">center</property>
                 <child>
                   <object class="GtkButton" id="error_more_info">
+                    <property name="action-name">win.error_more_info</property>
                     <property name="label" translatable="true">More _Information</property>
                     <property name="use-underline">true</property>
                     <style>

@@ -90,7 +90,10 @@ pub fn newBuilder(comptime builder_ui_res_name: []const u8) !*c.GtkBuilder {
 }
 
 pub fn printAndCleanError(err: [*c][*c]c.GError, message: []const u8) void {
-    c.g_printerr("%s: %s\n", message.ptr, err.*.*.message);
+    if (err.* != null) {
+        c.g_printerr("%s: %s\n", message.ptr, err.*.*.message);
+    }
+
     c.g_clear_error(err);
 }
 

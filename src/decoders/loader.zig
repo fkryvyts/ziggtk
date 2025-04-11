@@ -1,14 +1,42 @@
 const std = @import("std");
 const gtk = @import("../widgets/gtk.zig");
 
-pub const CallbackFunc = ?*const fn (gtk.gpointer, ?*gtk.GdkTexture) void;
-
-const CallbackWrap = struct {
-    self: *Loader,
-    callback: CallbackFunc,
-    data: gtk.gpointer,
+pub const Image = struct {
+    allocator: std.mem.Allocator,
     image_texture: ?*gtk.GdkTexture,
+    error_message: []const u8,
+    path: []const u8,
+
+    pub fn new(data: Image) !*Image {
+        const res = try data.allocator.create(Image);
+        res.* = data;
+        res.path = try data.allocator.dupe(u8, data.path);
+        res.error_message = try data.allocator.dupe(u8, data.error_message);
+        return res;
+    }
+
+    pub fn destroy(self: *Image) void {
+        if (self.image_texture) |texture| {
+            gtk.g_object_unref(texture);
+        }
+
+        self.allocator.free(self.path);
+        self.allocator.free(self.error_message);
+        self.allocator.destroy(self);
+    }
+
+    pub fn width(self: *Image) f32 {
+        const texture = self.image_texture orelse return 0;
+        return @floatFromInt(gtk.gdk_texture_get_width(texture));
+    }
+
+    pub fn height(self: *Image) f32 {
+        const texture = self.image_texture orelse return 0;
+        return @floatFromInt(gtk.gdk_texture_get_height(texture));
+    }
 };
+
+pub const CallbackFunc = ?*const fn (gtk.gpointer, *Image) void;
 
 pub const Loader = struct {
     allocator: std.mem.Allocator = undefined,
@@ -39,24 +67,50 @@ pub const Loader = struct {
         //std.Thread.sleep(std.time.ns_per_s * 3);
 
         var err: [*c]gtk.GError = null;
+        var err_msg: []u8 = "";
         const image_texture = gtk.gdk_texture_new_from_filename(path.ptr, &err);
+        defer gtk.printAndCleanError(&err, "Failed to load image");
 
         if (err != null) {
-            gtk.printAndCleanError(&err, "Failed to load image");
+            err_msg = std.mem.span(err.*.message);
         }
 
-        const wrap = self.allocator.create(CallbackWrap) catch return;
-        wrap.* = .{ .self = self, .callback = callback, .data = data, .image_texture = image_texture };
+        const image = Image.new(.{
+            .allocator = self.allocator,
+            .path = path,
+            .error_message = err_msg,
+            .image_texture = image_texture,
+        }) catch return;
 
-        _ = gtk.g_idle_add(@ptrCast(&Loader.onImageLoad), wrap);
+        const wrap = CallbackWrap.new(.{
+            .allocator = self.allocator,
+            .callback = callback,
+            .data = data,
+            .image = image,
+        }) catch return;
+
+        _ = gtk.g_idle_add(@ptrCast(&CallbackWrap.onDone), wrap);
+    }
+};
+
+const CallbackWrap = struct {
+    allocator: std.mem.Allocator,
+    callback: CallbackFunc,
+    data: gtk.gpointer,
+    image: *Image,
+
+    fn new(data: CallbackWrap) !*CallbackWrap {
+        const res = try data.allocator.create(CallbackWrap);
+        res.* = data;
+        return res;
     }
 
     // Executed in the main GTK thread
-    fn onImageLoad(wrap: *CallbackWrap) callconv(.c) gtk.gboolean {
-        defer wrap.self.allocator.destroy(wrap);
+    fn onDone(self: *CallbackWrap) callconv(.c) gtk.gboolean {
+        defer self.allocator.destroy(self);
 
-        const c = wrap.callback orelse return 0;
-        c(wrap.data, wrap.image_texture);
+        const c = self.callback orelse return 0;
+        c(self.data, self.image);
         return 0;
     }
 };

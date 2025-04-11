@@ -63,6 +63,7 @@
     <property name="width-request">360</property>
     <property name="height-request">294</property>
     <property name="content">
+      <object id="error_details" class="ZvErrorDetails"></object>
       <object class="AdwToastOverlay" id="toast_overlay">
         <child>
           <object class="AdwBin">

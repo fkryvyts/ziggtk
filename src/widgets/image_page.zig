@@ -46,16 +46,26 @@ pub const ZvImagePage = extern struct {
         loader.default_loader.loadImage(path, @ptrCast(&ZvImagePage.onImageLoad), self) catch return;
     }
 
+    pub fn reloadImage(self: *ZvImagePage) void {
+        const image = self.image_view.image orelse return;
+        gtk.gtk_stack_set_visible_child(self.stack, self.spinner_page);
+        loader.default_loader.loadImage(image.path, @ptrCast(&ZvImagePage.onImageLoad), self) catch return;
+    }
+
+    pub fn getImageError(self: *ZvImagePage) []const u8 {
+        const image = self.image_view.image orelse return "";
+        return image.error_message;
+    }
+
     // No need to define it as callconv(.c) since it is called from Zig
-    fn onImageLoad(self: *ZvImagePage, image_texture: ?*gtk.GdkTexture) void {
-        if (image_texture == null) {
+    fn onImageLoad(self: *ZvImagePage, image: *loader.Image) void {
+        self.image_view.setImage(image);
+
+        if (image.image_texture == null) {
             gtk.gtk_stack_set_visible_child(self.stack, self.error_page);
             return;
         }
 
-        defer gtk.g_object_unref(image_texture);
-
-        self.image_view.setImageTexture(image_texture);
         gtk.gtk_stack_set_visible_child(self.stack, self.image_stack_page);
     }
 
