@@ -28,10 +28,19 @@ pub const ZvImageView = extern struct {
     vscroll_policy: gtk.GtkScrollablePolicyEnum,
     hscroll_policy: gtk.GtkScrollablePolicyEnum,
     image: ?*loader.Image,
+    zoom: f32,
 
     pub fn init(self: *ZvImageView) callconv(.c) void {
+        self.zoom = 1.0;
+
         gtk.signalConnect(self, "notify::hadjustment", @ptrCast(&ZvImageView.onNotifyHadjustment), null);
         gtk.signalConnect(self, "notify::vadjustment", @ptrCast(&ZvImageView.onNotifyVadjustment), null);
+    }
+
+    pub fn setZoom(self: *ZvImageView, zoom: f32) void {
+        self.zoom = zoom;
+        self.configureAjustments();
+        gtk.gtk_widget_queue_draw(@ptrCast(self));
     }
 
     pub fn setImage(self: *ZvImageView, image: ?*loader.Image) void {
@@ -55,10 +64,11 @@ pub const ZvImageView = extern struct {
         gtk.gtk_widget_queue_draw(@ptrCast(self));
     }
 
+    // Configures scroll bars around the widget
     fn configureAjustments(self: *ZvImageView) void {
         const img = self.image orelse return;
-        const img_width: f64 = img.width();
-        const img_height: f64 = img.height();
+        const img_width: f64 = img.width() * self.zoom;
+        const img_height: f64 = img.height() * self.zoom;
         const widget_width: f64 = @floatFromInt(gtk.gtk_widget_get_width(@ptrCast(self)));
         const widget_height: f64 = @floatFromInt(gtk.gtk_widget_get_height(@ptrCast(self)));
         const hvalue = gtk.gtk_adjustment_get_value(self.hadjustment);
@@ -72,21 +82,26 @@ pub const ZvImageView = extern struct {
         gtk.gtk_adjustment_configure(self.vadjustment, @min(vvalue, img_height), 0, img_height, widget_height * 0.1, widget_height * 0.9, @min(widget_height, img_height));
     }
 
+    // Called when widget was resized
     fn onSizeAllocate(self: *ZvImageView, _: c_int, _: c_int, _: c_int) callconv(.c) void {
         self.configureAjustments();
     }
 
+    // Called when widget needs redrawing
     fn onSnapshot(self: *ZvImageView, snapshot: *gtk.GtkSnapshot) callconv(.c) void {
         const img = self.image orelse return;
-        const img_width: f32 = img.width();
-        const img_height: f32 = img.height();
-        const widget_width: f32 = @floatFromInt(gtk.gtk_widget_get_width(@ptrCast(self)));
-        const widget_height: f32 = @floatFromInt(gtk.gtk_widget_get_height(@ptrCast(self)));
+        const img_width: f64 = img.width() * self.zoom;
+        const img_height: f64 = img.height() * self.zoom;
+        const widget_width: f64 = @floatFromInt(gtk.gtk_widget_get_width(@ptrCast(self)));
+        const widget_height: f64 = @floatFromInt(gtk.gtk_widget_get_height(@ptrCast(self)));
+
+        gtk.gtk_snapshot_save(snapshot);
+        defer gtk.gtk_snapshot_restore(snapshot);
 
         // Background
         gtk.gtk_snapshot_append_color(snapshot, &background_color, &.{ .size = .{
-            .width = widget_width,
-            .height = widget_height,
+            .width = @floatCast(widget_width),
+            .height = @floatCast(widget_height),
         } });
 
         // Scroll bars
@@ -105,10 +120,19 @@ pub const ZvImageView = extern struct {
         gtk.gtk_snapshot_translate(snapshot, &.{ .x = @floatCast(rendering_x), .y = @floatCast(rendering_y) });
 
         // Actual image
-        gtk.gtk_snapshot_append_texture(snapshot, img.image_texture, &.{ .size = .{
-            .width = img_width,
-            .height = img_height,
-        } });
+        const area = gtk.graphene_rect_t{ .size = .{
+            .width = @floatCast(img_width),
+            .height = @floatCast(img_height),
+        } };
+
+        var filter = gtk.GSK_SCALING_FILTER_NEAREST;
+        if (self.zoom < 1) {
+            filter = gtk.GSK_SCALING_FILTER_TRILINEAR;
+        }
+
+        gtk.gtk_snapshot_push_clip(snapshot, &area);
+        gtk.gtk_snapshot_append_scaled_texture(snapshot, img.image_texture, @intCast(filter), &area);
+        gtk.gtk_snapshot_pop(snapshot);
     }
 };
 
