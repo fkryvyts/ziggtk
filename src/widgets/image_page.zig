@@ -41,6 +41,10 @@ pub const ZvImagePage = extern struct {
         gtk.signalConnect(self.press_gesture, "pressed", @ptrCast(&ZvImagePage.onLongPressGesture), self);
     }
 
+    pub fn setZoom(self: *ZvImagePage, zoom: f32) void {
+        self.image_view.setZoom(zoom);
+    }
+
     pub fn loadImage(self: *ZvImagePage, path: []const u8) void {
         gtk.gtk_stack_set_visible_child(self.stack, self.spinner_page);
         loader.default_loader.loadImage(path, @ptrCast(&ZvImagePage.onImageLoad), self) catch return;

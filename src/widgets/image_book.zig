@@ -61,7 +61,7 @@ pub const ZvImageBook = extern struct {
             zoom = 0.5;
         }
 
-        self.currentPage().image_view.setZoom(zoom);
+        self.currentPage().setZoom(zoom);
     }
 };
 
