@@ -104,7 +104,7 @@ pub const ZvImageView = extern struct {
             .height = @floatCast(widget_height),
         } });
 
-        // Scroll bars
+        // Apply scrolling
         const hvalue = gtk.gtk_adjustment_get_value(self.hadjustment);
         const hupper = gtk.gtk_adjustment_get_upper(self.hadjustment);
         gtk.gtk_snapshot_translate(snapshot, &.{ .x = @floatCast(-(hvalue - (hupper - img_width) / 2)) });
@@ -119,7 +119,7 @@ pub const ZvImageView = extern struct {
 
         gtk.gtk_snapshot_translate(snapshot, &.{ .x = @floatCast(rendering_x), .y = @floatCast(rendering_y) });
 
-        // Actual image
+        // Render image
         const area = gtk.graphene_rect_t{ .size = .{
             .width = @floatCast(img_width),
             .height = @floatCast(img_height),

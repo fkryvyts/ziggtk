@@ -65,7 +65,7 @@ pub const ZvImagePage = extern struct {
     fn onImageLoad(self: *ZvImagePage, image: *loader.Image) void {
         self.image_view.setImage(image);
 
-        if (image.image_texture == null) {
+        if (image.error_message.len > 0) {
             gtk.gtk_stack_set_visible_child(self.stack, self.error_page);
             return;
         }
