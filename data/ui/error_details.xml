@@ -23,7 +23,7 @@
               <object class="AdwPreferencesGroup">
                 <property name="title" translatable="true">Error Message</property>
                 <property name="header-suffix">
-                  <object class="GtkButton" id="copy">
+                  <object class="GtkButton" id="copy_btn">
                     <property name="icon-name">edit-copy-symbolic</property>
                     <property name="tooltip-text" translatable="yes">Copy Error Message</property>
                     <style>

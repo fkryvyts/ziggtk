@@ -9,6 +9,7 @@ pub const ZvImageBookClass = extern struct {
         gtk.setTemplate(self, "ui/image_book.xml");
         gtk.bindTemplateChildren(self, ZvImageBook, &.{
             "image_page",
+            "zoom_to_list",
         });
         gtk.bindProperties(self, ZvImageBook, &.{
             "zoom_toggle_state",
@@ -19,6 +20,7 @@ pub const ZvImageBookClass = extern struct {
 pub const ZvImageBook = extern struct {
     parent_instance: gtk.AdwBin,
     image_page: *image_page.ZvImagePage,
+    zoom_to_list: *gtk.GtkListBox,
     zoom_toggle_state: bool,
 
     pub fn init(self: *ZvImageBook) callconv(.c) void {
