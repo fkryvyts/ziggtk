@@ -78,16 +78,18 @@ pub const ZvImageView = extern struct {
         const current_frame_time = gtk.gdk_frame_clock_get_frame_time(clock);
         const dur = current_frame_time - self.last_frame_time;
 
-        if (dur > frame_animation_duration) {
-            var frame = self.current_frame + 1;
-            if (frame >= self.max_frames) {
-                frame = 0;
-            }
-
-            self.current_frame = frame;
-            self.last_frame_time = current_frame_time;
-            gtk.gtk_widget_queue_draw(@ptrCast(self));
+        if (dur < frame_animation_duration) {
+            return;
         }
+
+        var frame = self.current_frame + 1;
+        if (frame >= self.max_frames) {
+            frame = 0;
+        }
+
+        self.current_frame = frame;
+        self.last_frame_time = current_frame_time;
+        gtk.gtk_widget_queue_draw(@ptrCast(self));
     }
 
     fn onNotifyHadjustment(self: *ZvImageView) callconv(.c) void {
