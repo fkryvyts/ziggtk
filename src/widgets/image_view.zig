@@ -131,7 +131,7 @@ pub const ZvImageView = extern struct {
         }
 
         gtk.gtk_snapshot_push_clip(snapshot, &area);
-        gtk.gtk_snapshot_append_scaled_texture(snapshot, img.image_texture, @intCast(filter), &area);
+        gtk.gtk_snapshot_append_scaled_texture(snapshot, img.firstFrame(), @intCast(filter), &area);
         gtk.gtk_snapshot_pop(snapshot);
     }
 };

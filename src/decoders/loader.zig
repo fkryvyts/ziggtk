@@ -89,29 +89,36 @@ pub const Loader = struct {
                 .allocator = self.allocator,
                 .path = path,
                 .error_message = std.mem.span(res.err),
-                .image_texture = null,
             });
         }
 
-        const pixbuf = gtk.gdk_pixbuf_new_from_data(
-            res.data.frames[0],
-            gtk.GDK_COLORSPACE_RGB,
-            1,
-            8,
-            res.data.width,
-            res.data.height,
-            res.data.width * 4,
-            @ptrCast(&imagex.FreeImageFrame),
-            null,
-        );
-        defer gtk.g_object_unref(pixbuf);
-
-        return images.Image.new(.{
+        var img = try images.Image.new(.{
             .allocator = self.allocator,
             .path = path,
-            .error_message = "",
-            .image_texture = gtk.gdk_texture_new_for_pixbuf(pixbuf),
         });
+
+        var i: c_int = 0;
+        while (i < res.data.frame_count) : (i += 1) {
+            const pixbuf = gtk.gdk_pixbuf_new_from_data(
+                res.data.frames[@intCast(i)],
+                gtk.GDK_COLORSPACE_RGB,
+                1,
+                8,
+                res.data.width,
+                res.data.height,
+                res.data.width * 4,
+                @ptrCast(&imagex.FreeImageFrame),
+                null,
+            );
+            defer gtk.g_object_unref(pixbuf);
+
+            const texture = gtk.gdk_texture_new_for_pixbuf(pixbuf);
+            if (texture) |tex| {
+                try img.addFrame(tex);
+            }
+        }
+
+        return img;
     }
 };
 
