@@ -10,8 +10,13 @@ pub const Image = struct {
     pub fn new(data: Image) !*Image {
         const res = try data.allocator.create(Image);
         res.* = data;
+
         res.path = try data.allocator.dupe(u8, data.path);
+        errdefer data.allocator.free(res.path);
+
         res.error_message = try data.allocator.dupe(u8, data.error_message);
+        errdefer data.allocator.free(res.error_message);
+
         return res;
     }
 

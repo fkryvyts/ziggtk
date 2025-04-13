@@ -30,8 +30,12 @@ pub const Loader = struct {
         try self.pool.spawn(Loader.loadImageJob, .{ self, path_copy, callback, data });
     }
 
-    // Executed in the worker thread
     fn loadImageJob(self: *Loader, path: []const u8, callback: CallbackFunc, data: gtk.gpointer) void {
+        loadImageJobWithErr(self, path, callback, data) catch return;
+    }
+
+    // Executed in the worker thread
+    fn loadImageJobWithErr(self: *Loader, path: []const u8, callback: CallbackFunc, data: gtk.gpointer) !void {
         defer self.allocator.free(path);
 
         //std.Thread.sleep(std.time.ns_per_s * 3);
@@ -39,21 +43,24 @@ pub const Loader = struct {
         var img: *images.Image = undefined;
 
         if (std.mem.indexOf(u8, path, ".gif")) |_| {
-            img = self.loadImageExternally(path) catch return;
+            img = try self.loadImageExternally(path);
         } else {
-            img = self.loadImageDefault(path) catch return;
+            img = try self.loadImageDefault(path);
         }
 
-        const wrap = CallbackWrap.new(.{
+        errdefer img.destroy();
+
+        const wrap = try CallbackWrap.new(.{
             .allocator = self.allocator,
             .callback = callback,
             .data = data,
             .image = img,
-        }) catch return;
+        });
 
         _ = gtk.g_idle_add(@ptrCast(&CallbackWrap.onDone), wrap);
     }
 
+    // Load image textures via native GTK functionality
     fn loadImageDefault(self: *Loader, path: []const u8) !*images.Image {
         var err: [*c]gtk.GError = null;
         var err_msg: []u8 = "";
@@ -72,6 +79,7 @@ pub const Loader = struct {
         });
     }
 
+    // Load image textures via external Imagex library
     fn loadImageExternally(self: *Loader, path: []const u8) !*images.Image {
         const res = imagex.LoadImage(path.ptr);
         defer imagex.FreeResult(res);
