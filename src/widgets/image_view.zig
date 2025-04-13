@@ -4,6 +4,7 @@ const errors = @import("errors.zig");
 const images = @import("../decoders/images.zig");
 
 const background_color = gtk.GdkRGBA{ .red = 34 / 255, .green = 34 / 255, .blue = 38 / 255, .alpha = 1 };
+const frame_animation_duration = 100 * std.time.us_per_ms;
 
 pub const ZvImageViewClass = extern struct {
     parent_class: gtk.GtkWidgetClass,
@@ -29,9 +30,16 @@ pub const ZvImageView = extern struct {
     hscroll_policy: gtk.GtkScrollablePolicyEnum,
     image: ?*images.Image,
     zoom: f32,
+    last_frame_time: gtk.gint64,
+    current_frame: u32,
+    max_frames: u32,
+    tick_callback_id: gtk.guint,
 
     pub fn init(self: *ZvImageView) callconv(.c) void {
         self.zoom = 1.0;
+        self.current_frame = 0;
+        self.max_frames = 1;
+        self.tick_callback_id = 0;
 
         gtk.signalConnect(self, "notify::hadjustment", @ptrCast(&ZvImageView.onNotifyHadjustment), null);
         gtk.signalConnect(self, "notify::vadjustment", @ptrCast(&ZvImageView.onNotifyVadjustment), null);
@@ -49,7 +57,37 @@ pub const ZvImageView = extern struct {
         }
 
         self.image = image;
+        self.current_frame = 0;
+
+        if (self.tick_callback_id != 0) {
+            gtk.gtk_widget_remove_tick_callback(@ptrCast(self), self.tick_callback_id);
+        }
+
+        if (image) |img| {
+            self.max_frames = @intCast(img.framesCount());
+        }
+
+        if (self.max_frames > 1) {
+            self.tick_callback_id = gtk.gtk_widget_add_tick_callback(@ptrCast(self), @ptrCast(&ZvImageView.onTick), null, null);
+        }
+
         self.configureAjustments();
+    }
+
+    fn onTick(self: *ZvImageView, clock: *gtk.GdkFrameClock) callconv(.c) void {
+        const current_frame_time = gtk.gdk_frame_clock_get_frame_time(clock);
+        const dur = current_frame_time - self.last_frame_time;
+
+        if (dur > frame_animation_duration) {
+            var frame = self.current_frame + 1;
+            if (frame >= self.max_frames) {
+                frame = 0;
+            }
+
+            self.current_frame = frame;
+            self.last_frame_time = current_frame_time;
+            gtk.gtk_widget_queue_draw(@ptrCast(self));
+        }
     }
 
     fn onNotifyHadjustment(self: *ZvImageView) callconv(.c) void {
@@ -131,7 +169,7 @@ pub const ZvImageView = extern struct {
         }
 
         gtk.gtk_snapshot_push_clip(snapshot, &area);
-        gtk.gtk_snapshot_append_scaled_texture(snapshot, img.firstFrame(), @intCast(filter), &area);
+        gtk.gtk_snapshot_append_scaled_texture(snapshot, img.frames.items[self.current_frame], @intCast(filter), &area);
         gtk.gtk_snapshot_pop(snapshot);
     }
 };

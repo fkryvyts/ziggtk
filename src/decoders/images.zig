@@ -52,6 +52,10 @@ pub const Image = struct {
         self.allocator.destroy(self);
     }
 
+    pub fn framesCount(self: *Image) usize {
+        return self.frames.items.len;
+    }
+
     pub fn firstFrame(self: *Image) ?*gtk.GdkTexture {
         if (self.frames.items.len == 0) {
             return null;
