@@ -4,7 +4,6 @@ const errors = @import("errors.zig");
 const images = @import("../decoders/images.zig");
 
 const background_color = gtk.GdkRGBA{ .red = 34 / 255, .green = 34 / 255, .blue = 38 / 255, .alpha = 1 };
-const frame_animation_duration = 100 * std.time.us_per_ms;
 
 pub const ZvImageViewClass = extern struct {
     parent_class: gtk.GtkWidgetClass,
@@ -75,10 +74,12 @@ pub const ZvImageView = extern struct {
     }
 
     fn onTick(self: *ZvImageView, clock: *gtk.GdkFrameClock) callconv(.c) void {
+        const img = self.image orelse return;
         const current_frame_time = gtk.gdk_frame_clock_get_frame_time(clock);
-        const dur = current_frame_time - self.last_frame_time;
+        const delay: u64 = img.frames.items[self.current_frame].delay;
+        const dur = (current_frame_time - self.last_frame_time) * std.time.ns_per_us;
 
-        if (dur < frame_animation_duration) {
+        if ((delay == 0) or (dur < delay)) {
             return;
         }
 
@@ -134,6 +135,7 @@ pub const ZvImageView = extern struct {
         const img_height: f64 = img.height() * self.zoom;
         const widget_width: f64 = @floatFromInt(gtk.gtk_widget_get_width(@ptrCast(self)));
         const widget_height: f64 = @floatFromInt(gtk.gtk_widget_get_height(@ptrCast(self)));
+        const texture = img.frames.items[self.current_frame].texture;
 
         gtk.gtk_snapshot_save(snapshot);
         defer gtk.gtk_snapshot_restore(snapshot);
@@ -171,7 +173,7 @@ pub const ZvImageView = extern struct {
         }
 
         gtk.gtk_snapshot_push_clip(snapshot, &area);
-        gtk.gtk_snapshot_append_scaled_texture(snapshot, img.frames.items[self.current_frame], @intCast(filter), &area);
+        gtk.gtk_snapshot_append_scaled_texture(snapshot, texture, @intCast(filter), &area);
         gtk.gtk_snapshot_pop(snapshot);
     }
 };

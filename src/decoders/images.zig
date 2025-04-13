@@ -8,22 +8,28 @@ pub const ImageOptions = struct {
     error_message: []const u8 = "",
 };
 
+pub const Frame = struct {
+    texture: ?*gtk.GdkTexture,
+    // When to show the next frame for animated images (GIFs etc), in nanoseconds
+    delay: u64 = 0,
+};
+
 pub const Image = struct {
     allocator: std.mem.Allocator,
     image_texture: ?*gtk.GdkTexture,
     error_message: []const u8,
     path: []const u8,
-    frames: std.ArrayList(*gtk.GdkTexture),
+    frames: std.ArrayList(Frame),
 
     pub fn new(data: ImageOptions) !*Image {
         const res = try data.allocator.create(Image);
         res.allocator = data.allocator;
 
-        var frames = std.ArrayList(*gtk.GdkTexture).init(data.allocator);
+        var frames = std.ArrayList(Frame).init(data.allocator);
         errdefer frames.deinit();
 
         if (data.image_texture) |texture| {
-            try frames.append(texture);
+            try frames.append(.{ .texture = texture });
         }
 
         res.frames = frames;
@@ -37,13 +43,13 @@ pub const Image = struct {
         return res;
     }
 
-    pub fn addFrame(self: *Image, frame: *gtk.GdkTexture) !void {
+    pub fn addFrame(self: *Image, frame: Frame) !void {
         try self.frames.append(frame);
     }
 
     pub fn destroy(self: *Image) void {
         for (self.frames.items) |frame| {
-            gtk.g_object_unref(frame);
+            gtk.g_object_unref(frame.texture);
         }
 
         self.frames.deinit();
@@ -56,21 +62,21 @@ pub const Image = struct {
         return self.frames.items.len;
     }
 
-    pub fn firstFrame(self: *Image) ?*gtk.GdkTexture {
+    pub fn firstFrameTexture(self: *Image) ?*gtk.GdkTexture {
         if (self.frames.items.len == 0) {
             return null;
         }
 
-        return self.frames.items[0];
+        return self.frames.items[0].texture;
     }
 
     pub fn width(self: *Image) f32 {
-        const texture = self.firstFrame() orelse return 0;
+        const texture = self.firstFrameTexture() orelse return 0;
         return @floatFromInt(gtk.gdk_texture_get_width(texture));
     }
 
     pub fn height(self: *Image) f32 {
-        const texture = self.firstFrame() orelse return 0;
+        const texture = self.firstFrameTexture() orelse return 0;
         return @floatFromInt(gtk.gdk_texture_get_height(texture));
     }
 };

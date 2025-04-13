@@ -114,7 +114,7 @@ pub const Loader = struct {
 
             const texture = gtk.gdk_texture_new_for_pixbuf(pixbuf);
             if (texture) |tex| {
-                try img.addFrame(tex);
+                try img.addFrame(.{ .texture = tex, .delay = @intCast(res.data.frame_delays[@intCast(i)]) });
             }
         }
 
