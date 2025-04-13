@@ -1,42 +1,12 @@
+const c = @cImport({
+    @cInclude("libgoimagex-1.h");
+});
+
 const std = @import("std");
 const gtk = @import("../widgets/gtk.zig");
+const images = @import("images.zig");
 
-pub const Image = struct {
-    allocator: std.mem.Allocator,
-    image_texture: ?*gtk.GdkTexture,
-    error_message: []const u8,
-    path: []const u8,
-
-    pub fn new(data: Image) !*Image {
-        const res = try data.allocator.create(Image);
-        res.* = data;
-        res.path = try data.allocator.dupe(u8, data.path);
-        res.error_message = try data.allocator.dupe(u8, data.error_message);
-        return res;
-    }
-
-    pub fn destroy(self: *Image) void {
-        if (self.image_texture) |texture| {
-            gtk.g_object_unref(texture);
-        }
-
-        self.allocator.free(self.path);
-        self.allocator.free(self.error_message);
-        self.allocator.destroy(self);
-    }
-
-    pub fn width(self: *Image) f32 {
-        const texture = self.image_texture orelse return 0;
-        return @floatFromInt(gtk.gdk_texture_get_width(texture));
-    }
-
-    pub fn height(self: *Image) f32 {
-        const texture = self.image_texture orelse return 0;
-        return @floatFromInt(gtk.gdk_texture_get_height(texture));
-    }
-};
-
-pub const CallbackFunc = ?*const fn (gtk.gpointer, *Image) void;
+pub const CallbackFunc = ?*const fn (gtk.gpointer, *images.Image) void;
 
 pub const Loader = struct {
     allocator: std.mem.Allocator = undefined,
@@ -66,6 +36,25 @@ pub const Loader = struct {
 
         //std.Thread.sleep(std.time.ns_per_s * 3);
 
+        var img: *images.Image = undefined;
+
+        if (std.mem.indexOf(u8, path, ".gif")) |_| {
+            img = self.loadImageExternally(path) catch return;
+        } else {
+            img = self.loadImageDefault(path) catch return;
+        }
+
+        const wrap = CallbackWrap.new(.{
+            .allocator = self.allocator,
+            .callback = callback,
+            .data = data,
+            .image = img,
+        }) catch return;
+
+        _ = gtk.g_idle_add(@ptrCast(&CallbackWrap.onDone), wrap);
+    }
+
+    fn loadImageDefault(self: *Loader, path: []const u8) !*images.Image {
         var err: [*c]gtk.GError = null;
         var err_msg: []u8 = "";
         const image_texture = gtk.gdk_texture_new_from_filename(path.ptr, &err);
@@ -75,21 +64,42 @@ pub const Loader = struct {
             err_msg = std.mem.span(err.*.message);
         }
 
-        const image = Image.new(.{
+        return images.Image.new(.{
             .allocator = self.allocator,
             .path = path,
             .error_message = err_msg,
             .image_texture = image_texture,
-        }) catch return;
+        });
+    }
 
-        const wrap = CallbackWrap.new(.{
+    fn loadImageExternally(self: *Loader, path: []const u8) !*images.Image {
+        const res = c.LoadImage(path.ptr);
+        defer c.FreeResult(res);
+
+        if (res.err != null) {
+            return images.Image.new(.{
+                .allocator = self.allocator,
+                .path = path,
+                .error_message = std.mem.span(res.err),
+                .image_texture = null,
+            });
+        }
+
+        const pixbuf = gtk.gdk_pixbuf_new_from_data(res.data.frames[0], gtk.GDK_COLORSPACE_RGB, 1, 8, res.data.width, res.data.height, res.data.width * 4, @ptrCast(&Loader.freeExternalImageFrame), self);
+        defer gtk.g_object_unref(pixbuf);
+
+        const texture = gtk.gdk_texture_new_for_pixbuf(pixbuf);
+
+        return images.Image.new(.{
             .allocator = self.allocator,
-            .callback = callback,
-            .data = data,
-            .image = image,
-        }) catch return;
+            .path = path,
+            .error_message = "",
+            .image_texture = texture,
+        });
+    }
 
-        _ = gtk.g_idle_add(@ptrCast(&CallbackWrap.onDone), wrap);
+    fn freeExternalImageFrame(frame: *gtk.guchar, _: *Loader) callconv(.c) void {
+        c.FreeImageFrame(frame);
     }
 };
 
@@ -97,7 +107,7 @@ const CallbackWrap = struct {
     allocator: std.mem.Allocator,
     callback: CallbackFunc,
     data: gtk.gpointer,
-    image: *Image,
+    image: *images.Image,
 
     fn new(data: CallbackWrap) !*CallbackWrap {
         const res = try data.allocator.create(CallbackWrap);
@@ -109,8 +119,8 @@ const CallbackWrap = struct {
     fn onDone(self: *CallbackWrap) callconv(.c) gtk.gboolean {
         defer self.allocator.destroy(self);
 
-        const c = self.callback orelse return 0;
-        c(self.data, self.image);
+        const callback = self.callback orelse return 0;
+        callback(self.data, self.image);
         return 0;
     }
 };

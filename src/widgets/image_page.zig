@@ -3,6 +3,7 @@ const gtk = @import("gtk.zig");
 const image_view = @import("image_view.zig");
 const errors = @import("errors.zig");
 const loader = @import("../decoders/loader.zig");
+const images = @import("../decoders/images.zig");
 
 pub const ZvImagePageClass = extern struct {
     parent_class: gtk.AdwBinClass,
@@ -62,7 +63,7 @@ pub const ZvImagePage = extern struct {
     }
 
     // No need to define it as callconv(.c) since it is called from Zig
-    fn onImageLoad(self: *ZvImagePage, image: *loader.Image) void {
+    fn onImageLoad(self: *ZvImagePage, image: *images.Image) void {
         self.image_view.setImage(image);
 
         if (image.error_message.len > 0) {

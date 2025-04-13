@@ -11,11 +11,12 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
-    //app.addIncludePath(.{ .src_path = .{ .owner = b, .sub_path = "lib/" } });
-    //app.addLibraryPath(.{ .src_path = .{ .owner = b, .sub_path = "lib/" } });
+    app.addIncludePath(.{ .src_path = .{ .owner = b, .sub_path = "lib/" } });
+    app.addLibraryPath(.{ .src_path = .{ .owner = b, .sub_path = "lib/" } });
     app.linkLibC();
     app.linkSystemLibrary("gtk4");
     app.linkSystemLibrary("libadwaita-1");
+    app.linkSystemLibrary("goimagex-1");
 
     b.installArtifact(app);
 

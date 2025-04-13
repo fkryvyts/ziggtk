@@ -1,7 +1,7 @@
 const std = @import("std");
 const gtk = @import("gtk.zig");
 const errors = @import("errors.zig");
-const loader = @import("../decoders/loader.zig");
+const images = @import("../decoders/images.zig");
 
 const background_color = gtk.GdkRGBA{ .red = 34 / 255, .green = 34 / 255, .blue = 38 / 255, .alpha = 1 };
 
@@ -27,7 +27,7 @@ pub const ZvImageView = extern struct {
     vadjustment: ?*gtk.GtkAdjustment,
     vscroll_policy: gtk.GtkScrollablePolicyEnum,
     hscroll_policy: gtk.GtkScrollablePolicyEnum,
-    image: ?*loader.Image,
+    image: ?*images.Image,
     zoom: f32,
 
     pub fn init(self: *ZvImageView) callconv(.c) void {
@@ -43,7 +43,7 @@ pub const ZvImageView = extern struct {
         gtk.gtk_widget_queue_draw(@ptrCast(self));
     }
 
-    pub fn setImage(self: *ZvImageView, image: ?*loader.Image) void {
+    pub fn setImage(self: *ZvImageView, image: ?*images.Image) void {
         if (self.image) |img| {
             img.destroy();
         }
@@ -82,7 +82,7 @@ pub const ZvImageView = extern struct {
         gtk.gtk_adjustment_configure(self.vadjustment, @min(vvalue, img_height), 0, img_height, widget_height * 0.1, widget_height * 0.9, @min(widget_height, img_height));
     }
 
-    // Called when widget was resized
+    // Called when widget is resized
     fn onSizeAllocate(self: *ZvImageView, _: c_int, _: c_int, _: c_int) callconv(.c) void {
         self.configureAjustments();
     }
