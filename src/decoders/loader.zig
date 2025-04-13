@@ -101,8 +101,8 @@ pub const Loader = struct {
             res.data.width,
             res.data.height,
             res.data.width * 4,
-            @ptrCast(&Loader.freeExternalImageFrame),
-            self,
+            @ptrCast(&imagex.FreeImageFrame),
+            null,
         );
         defer gtk.g_object_unref(pixbuf);
 
@@ -112,10 +112,6 @@ pub const Loader = struct {
             .error_message = "",
             .image_texture = gtk.gdk_texture_new_for_pixbuf(pixbuf),
         });
-    }
-
-    fn freeExternalImageFrame(frame: *gtk.guchar, _: *Loader) callconv(.c) void {
-        imagex.FreeImageFrame(frame);
     }
 };
 
