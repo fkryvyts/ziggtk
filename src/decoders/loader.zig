@@ -1,4 +1,4 @@
-const c = @cImport({
+const imagex = @cImport({
     @cInclude("libgoimagex-1.h");
 });
 
@@ -73,8 +73,8 @@ pub const Loader = struct {
     }
 
     fn loadImageExternally(self: *Loader, path: []const u8) !*images.Image {
-        const res = c.LoadImage(path.ptr);
-        defer c.FreeResult(res);
+        const res = imagex.LoadImage(path.ptr);
+        defer imagex.FreeResult(res);
 
         if (res.err != null) {
             return images.Image.new(.{
@@ -85,21 +85,29 @@ pub const Loader = struct {
             });
         }
 
-        const pixbuf = gtk.gdk_pixbuf_new_from_data(res.data.frames[0], gtk.GDK_COLORSPACE_RGB, 1, 8, res.data.width, res.data.height, res.data.width * 4, @ptrCast(&Loader.freeExternalImageFrame), self);
+        const pixbuf = gtk.gdk_pixbuf_new_from_data(
+            res.data.frames[0],
+            gtk.GDK_COLORSPACE_RGB,
+            1,
+            8,
+            res.data.width,
+            res.data.height,
+            res.data.width * 4,
+            @ptrCast(&Loader.freeExternalImageFrame),
+            self,
+        );
         defer gtk.g_object_unref(pixbuf);
-
-        const texture = gtk.gdk_texture_new_for_pixbuf(pixbuf);
 
         return images.Image.new(.{
             .allocator = self.allocator,
             .path = path,
             .error_message = "",
-            .image_texture = texture,
+            .image_texture = gtk.gdk_texture_new_for_pixbuf(pixbuf),
         });
     }
 
     fn freeExternalImageFrame(frame: *gtk.guchar, _: *Loader) callconv(.c) void {
-        c.FreeImageFrame(frame);
+        imagex.FreeImageFrame(frame);
     }
 };
 
