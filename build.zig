@@ -12,6 +12,7 @@ pub fn build(b: *std.Build) void {
     });
 
     app.addIncludePath(.{ .src_path = .{ .owner = b, .sub_path = "lib/" } });
+    //app.addLibraryPath(.{ .src_path = .{ .owner = b, .sub_path = "lib/" } });
     app.addLibraryPath(.{ .cwd_relative = "lib" });
     app.linkLibC();
     app.linkSystemLibrary("gtk4");

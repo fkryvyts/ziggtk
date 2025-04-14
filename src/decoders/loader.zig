@@ -44,6 +44,8 @@ pub const Loader = struct {
 
         if (std.mem.indexOf(u8, path, ".gif")) |_| {
             img = try self.loadImageExternally(path);
+        } else if (std.mem.indexOf(u8, path, ".zpl")) |_| {
+            img = try self.loadImageExternally(path);
         } else {
             img = try self.loadImageDefault(path);
         }

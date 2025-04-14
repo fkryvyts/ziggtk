@@ -168,7 +168,7 @@ pub const ZvImageView = extern struct {
         } };
 
         var filter = gtk.GSK_SCALING_FILTER_NEAREST;
-        if (self.zoom < 1) {
+        if (self.zoom <= 1) {
             filter = gtk.GSK_SCALING_FILTER_TRILINEAR;
         }
 
