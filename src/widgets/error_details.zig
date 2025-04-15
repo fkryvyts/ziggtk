@@ -1,12 +1,13 @@
 const std = @import("std");
-const gtk = @import("gtk.zig");
+const gtk = @import("../gtk/gtk.zig");
+const gtkx = @import("../gtk/gtkx.zig");
 
 pub const ZvErrorDetailsClass = extern struct {
     parent_class: gtk.AdwDialogClass,
 
     pub fn init(self: *ZvErrorDetailsClass) callconv(.c) void {
-        gtk.setTemplate(self, "ui/error_details.xml");
-        gtk.bindTemplateChildren(self, ZvErrorDetails, &.{
+        gtkx.setTemplate(self, "ui/error_details.xml");
+        gtkx.bindTemplateChildren(self, ZvErrorDetails, &.{
             "message",
             "copy_btn",
         });
@@ -21,7 +22,7 @@ pub const ZvErrorDetails = extern struct {
     pub fn init(self: *ZvErrorDetails) callconv(.c) void {
         gtk.gtk_widget_init_template(@ptrCast(self));
 
-        gtk.signalConnect(self.copy_btn, "clicked", @ptrCast(&ZvErrorDetails.onCopyBtnClicked), self);
+        gtkx.signalConnect(self.copy_btn, "clicked", @ptrCast(&ZvErrorDetails.onCopyBtnClicked), self);
     }
 
     pub fn present(self: *ZvErrorDetails, text: []const u8, parent: ?*gtk.GtkWidget) void {
@@ -49,5 +50,5 @@ pub const ZvErrorDetails = extern struct {
 };
 
 pub fn registerType() gtk.GType {
-    return gtk.registerType(gtk.adw_dialog_get_type(), ZvErrorDetails, ZvErrorDetailsClass);
+    return gtkx.registerType(gtk.adw_dialog_get_type(), ZvErrorDetails, ZvErrorDetailsClass);
 }

@@ -1,16 +1,17 @@
 const std = @import("std");
-const gtk = @import("gtk.zig");
+const gtk = @import("../gtk/gtk.zig");
+const gtkx = @import("../gtk/gtkx.zig");
 
 pub const ZvDragOverlayClass = extern struct {
     parent_class: gtk.AdwBinClass,
 
     pub fn init(self: *ZvDragOverlayClass) callconv(.c) void {
-        gtk.setTemplate(self, "ui/drag_overlay.xml");
-        gtk.bindTemplateChildren(self, ZvDragOverlay, &.{
+        gtkx.setTemplate(self, "ui/drag_overlay.xml");
+        gtkx.bindTemplateChildren(self, ZvDragOverlay, &.{
             "overlay",
             "revealer",
         });
-        gtk.bindProperties(self, ZvDragOverlay, &.{
+        gtkx.bindProperties(self, ZvDragOverlay, &.{
             "drop_target",
             "content",
         });
@@ -27,12 +28,12 @@ pub const ZvDragOverlay = extern struct {
     pub fn init(self: *ZvDragOverlay) callconv(.c) void {
         gtk.gtk_widget_init_template(@ptrCast(self));
         gtk.gtk_widget_set_can_target(@ptrCast(@alignCast(self.revealer)), 0);
-        gtk.signalConnect(self, "notify::drop-target", @ptrCast(&ZvDragOverlay.onNotfyDropTarget), null);
-        gtk.signalConnect(self, "notify::content", @ptrCast(&ZvDragOverlay.onNotifyContent), null);
+        gtkx.signalConnect(self, "notify::drop-target", @ptrCast(&ZvDragOverlay.onNotfyDropTarget), null);
+        gtkx.signalConnect(self, "notify::content", @ptrCast(&ZvDragOverlay.onNotifyContent), null);
     }
 
     fn onNotfyDropTarget(self: *ZvDragOverlay) callconv(.c) void {
-        gtk.signalConnect(self.drop_target, "notify::current-drop", @ptrCast(&ZvDragOverlay.onNotifyCurrentDrop), self);
+        gtkx.signalConnect(self.drop_target, "notify::current-drop", @ptrCast(&ZvDragOverlay.onNotifyCurrentDrop), self);
     }
 
     fn onNotifyContent(self: *ZvDragOverlay) callconv(.c) void {
@@ -46,5 +47,5 @@ pub const ZvDragOverlay = extern struct {
 };
 
 pub fn registerType() gtk.GType {
-    return gtk.registerType(gtk.adw_bin_get_type(), ZvDragOverlay, ZvDragOverlayClass);
+    return gtkx.registerType(gtk.adw_bin_get_type(), ZvDragOverlay, ZvDragOverlayClass);
 }

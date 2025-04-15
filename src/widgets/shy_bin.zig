@@ -1,5 +1,6 @@
 const std = @import("std");
-const gtk = @import("gtk.zig");
+const gtk = @import("../gtk/gtk.zig");
+const gtkx = @import("../gtk/gtkx.zig");
 
 pub const ZvShyBinClass = extern struct {
     parent_class: gtk.AdwBinClass,
@@ -14,5 +15,5 @@ pub const ZvShyBin = extern struct {
 };
 
 pub fn registerType() gtk.GType {
-    return gtk.registerType(gtk.adw_bin_get_type(), ZvShyBin, ZvShyBinClass);
+    return gtkx.registerType(gtk.adw_bin_get_type(), ZvShyBin, ZvShyBinClass);
 }

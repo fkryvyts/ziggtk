@@ -1,53 +1,42 @@
-pub usingnamespace @cImport({
-    @cInclude("gtk/gtk.h");
-    @cInclude("adwaita.h");
-});
-
-const c = @cImport({
-    @cInclude("gtk/gtk.h");
-    @cInclude("adwaita.h");
-});
-
 const std = @import("std");
 const errors = @import("errors.zig");
+const gtk = @import("gtk.zig");
 
 const resource_prefix = "/com/github/fkryvyts/Ziggtk/";
 const application_id = "com.github.fkryvyts.Ziggtk";
 
 pub const GtkScrollablePolicyEnum = enum(c_int) {
-    MINIMUM = c.GTK_SCROLL_MINIMUM,
-    NATURAL = c.GTK_SCROLL_NATURAL,
+    MINIMUM = gtk.GTK_SCROLL_MINIMUM,
+    NATURAL = gtk.GTK_SCROLL_NATURAL,
 };
 
-pub fn installResources(comptime resource_path: []const u8) !void {
-    const res_data = @embedFile(resource_path);
+pub fn installResources(comptime res_data: []const u8) !void {
+    const res_bytes = gtk.g_bytes_new_static(res_data.ptr, res_data.len);
 
-    const res_bytes = c.g_bytes_new_static(res_data, res_data.len);
-
-    var err: [*c]c.GError = null;
-    const res = c.g_resource_new_from_data(res_bytes, &err);
+    var err: [*c]gtk.GError = null;
+    const res = gtk.g_resource_new_from_data(res_bytes, &err);
     if (err != null) {
         printAndCleanError(&err, "Error loading resource");
         return errors.err.InitializationFailed;
     }
 
-    c.g_resources_register(res);
+    gtk.g_resources_register(res);
 
-    defer c.g_resource_unref(res);
+    defer gtk.g_resource_unref(res);
 }
 
-pub fn signalConnect(instance: c.gpointer, detailed_signal: []const u8, c_handler: c.GCallback, data: c.gpointer) void {
-    _ = c.g_signal_connect_data(instance, detailed_signal.ptr, c_handler, data, null, 0);
+pub fn signalConnect(instance: gtk.gpointer, detailed_signal: []const u8, c_handler: gtk.GCallback, data: gtk.gpointer) void {
+    _ = gtk.g_signal_connect_data(instance, detailed_signal.ptr, c_handler, data, null, 0);
 }
 
-pub fn signalConnectSwapped(instance: c.gpointer, detailed_signal: []const u8, c_handler: c.GCallback, data: c.gpointer) c.gulong {
-    return c.g_signal_connect_data(instance, detailed_signal.ptr, c_handler, data, null, c.G_CONNECT_SWAPPED);
+pub fn signalConnectSwapped(instance: gtk.gpointer, detailed_signal: []const u8, c_handler: gtk.GCallback, data: gtk.gpointer) gtk.gulong {
+    return gtk.g_signal_connect_data(instance, detailed_signal.ptr, c_handler, data, null, gtk.G_CONNECT_SWAPPED);
 }
 
 pub fn setTemplate(widget_class: anytype, comptime widget_ui_res_name: []const u8) void {
     const res_path = resource_prefix ++ widget_ui_res_name;
-    c.gtk_widget_class_set_template_from_resource(@ptrCast(widget_class), res_path.ptr);
-    //c.gtk_widget_class_set_layout_manager_type(@ptrCast(widget_class), c.gtk_bin_layout_get_type());
+    gtk.gtk_widget_class_set_template_from_resource(@ptrCast(widget_class), res_path.ptr);
+    //gtk.gtk_widget_class_set_layout_manager_type(@ptrCast(widget_class), gtk.gtk_bin_layout_get_type());
 }
 
 pub fn bindTemplateChildren(widget_class: anytype, comptime widget_type: type, comptime names: []const []const u8) void {
@@ -62,26 +51,26 @@ pub fn bindProperties(widget_class: anytype, comptime widget_type: type, comptim
 
 pub const Action = struct {
     n: []const u8,
-    f: c.GtkWidgetActionActivateFunc,
+    f: gtk.GtkWidgetActionActivateFunc,
 };
 
 pub fn bindActions(widget_class: anytype, actions: []const Action) void {
     for (actions) |action| {
-        c.gtk_widget_class_install_action(@ptrCast(widget_class), action.n.ptr, null, action.f);
+        gtk.gtk_widget_class_install_action(@ptrCast(widget_class), action.n.ptr, null, action.f);
     }
 }
 
-pub fn registerType(parent_type: c.GType, comptime T: type, comptime CT: type) c.GType {
+pub fn registerType(parent_type: gtk.GType, comptime T: type, comptime CT: type) gtk.GType {
     const type_name = widgetTypeName(T);
-    return c.g_type_register_static_simple(parent_type, type_name.ptr, @sizeOf(CT), @ptrCast(&(CT).init), @sizeOf(T), @ptrCast(&(T).init), 0);
+    return gtk.g_type_register_static_simple(parent_type, type_name.ptr, @sizeOf(CT), @ptrCast(&(CT).init), @sizeOf(T), @ptrCast(&(T).init), 0);
 }
 
-pub fn newBuilder(comptime builder_ui_res_name: []const u8) !*c.GtkBuilder {
-    const b = c.gtk_builder_new() orelse return errors.err.InitializationFailed;
+pub fn newBuilder(comptime builder_ui_res_name: []const u8) !*gtk.GtkBuilder {
+    const b = gtk.gtk_builder_new() orelse return errors.err.InitializationFailed;
     const res_path = resource_prefix ++ builder_ui_res_name;
 
-    var err: [*c]c.GError = null;
-    if (c.gtk_builder_add_from_resource(b, res_path.ptr, &err) == 0) {
+    var err: [*c]gtk.GError = null;
+    if (gtk.gtk_builder_add_from_resource(b, res_path.ptr, &err) == 0) {
         printAndCleanError(&err, "Error loading file");
         return errors.err.InitializationFailed;
     }
@@ -89,55 +78,55 @@ pub fn newBuilder(comptime builder_ui_res_name: []const u8) !*c.GtkBuilder {
     return b;
 }
 
-pub fn printAndCleanError(err: [*c][*c]c.GError, message: []const u8) void {
+pub fn printAndCleanError(err: [*c][*c]gtk.GError, message: []const u8) void {
     if (err.* != null) {
-        c.g_printerr("%s: %s\n", message.ptr, err.*.*.message);
+        gtk.g_printerr("%s: %s\n", message.ptr, err.*.*.message);
     }
 
-    c.g_clear_error(err);
+    gtk.g_clear_error(err);
 }
 
-pub fn getBuilderObject(builder: ?*c.GtkBuilder, name: []const u8) !*c.GObject {
-    return c.gtk_builder_get_object(builder, name.ptr) orelse return errors.err.InitializationFailed;
+pub fn getBuilderObject(builder: ?*gtk.GtkBuilder, name: []const u8) !*gtk.GObject {
+    return gtk.gtk_builder_get_object(builder, name.ptr) orelse return errors.err.InitializationFailed;
 }
 
-pub fn newApplication() !*c.GApplication {
-    const app = c.adw_application_new(application_id, c.G_APPLICATION_DEFAULT_FLAGS) orelse return errors.err.InitializationFailed;
+pub fn newApplication() !*gtk.GApplication {
+    const app = gtk.adw_application_new(application_id, gtk.G_APPLICATION_DEFAULT_FLAGS) orelse return errors.err.InitializationFailed;
     return @ptrCast(app);
 }
 
-pub fn widgetParentOfType(widget: *c.GtkWidget, comptime T: type) ?*T {
-    var parent = c.gtk_widget_get_parent(widget);
+pub fn widgetParentOfType(widget: *gtk.GtkWidget, comptime T: type) ?*T {
+    var parent = gtk.gtk_widget_get_parent(widget);
 
     while (parent != null) {
-        const parent_name = c.gtk_widget_get_name(parent);
+        const parent_name = gtk.gtk_widget_get_name(parent);
 
         if (std.mem.eql(u8, std.mem.span(parent_name), widgetTypeName(T))) {
             return @ptrCast(parent);
         }
 
-        parent = c.gtk_widget_get_parent(parent);
+        parent = gtk.gtk_widget_get_parent(parent);
     }
 
     return null;
 }
 
-pub fn boolAsGValue(v: bool) c.GValue {
-    var val = std.mem.zeroes(c.GValue);
-    _ = c.g_value_init(&val, c.G_TYPE_BOOLEAN);
-    c.g_value_set_boolean(&val, @intFromBool(v));
+pub fn boolAsGValue(v: bool) gtk.GValue {
+    var val = std.mem.zeroes(gtk.GValue);
+    _ = gtk.g_value_init(&val, gtk.G_TYPE_BOOLEAN);
+    gtk.g_value_set_boolean(&val, @intFromBool(v));
     return val;
 }
 
 fn bindTemplateChild(widget_class: anytype, comptime widget_type: type, comptime name: []const u8) void {
-    c.gtk_widget_class_bind_template_child_full(@ptrCast(widget_class), name.ptr, 0, @offsetOf(widget_type, name));
+    gtk.gtk_widget_class_bind_template_child_full(@ptrCast(widget_class), name.ptr, 0, @offsetOf(widget_type, name));
 }
 
 fn propertiesBinder(comptime widget_type: type, comptime props: []const []const u8) type {
     return struct {
         const strct = @This();
 
-        pub fn bind(widget_class: *c.GtkWidgetClass) void {
+        pub fn bind(widget_class: *gtk.GtkWidgetClass) void {
             widget_class.parent_class.set_property = @ptrCast(&strct.onSetProperty);
             widget_class.parent_class.get_property = @ptrCast(&strct.onGetProperty);
 
@@ -149,54 +138,49 @@ fn propertiesBinder(comptime widget_type: type, comptime props: []const []const 
                         installBoolProp(widget_class, property_id, props[i]);
                     },
                     GtkScrollablePolicyEnum => {
-                        installEnumProp(widget_class, property_id, props[i], c.gtk_scrollable_policy_get_type());
+                        installEnumProp(widget_class, property_id, props[i], gtk.gtk_scrollable_policy_get_type());
                     },
                     else => {
                         const tn = comptime builtinWidgetTypeName(@FieldType(widget_type, props[i]));
-                        installObjectProp(widget_class, property_id, props[i], @field(c, camelToSnake(tn) ++ "_get_type")());
+                        installObjectProp(widget_class, property_id, props[i], @field(gtk, camelToSnake(tn) ++ "_get_type")());
                     },
                 }
             }
         }
 
-        pub fn onSetProperty(self: *widget_type, property_id: c.guint, val: *const c.GValue, _: *c.GParamSpec) callconv(.c) void {
+        pub fn onSetProperty(self: *widget_type, property_id: gtk.guint, val: *const gtk.GValue, _: *gtk.GParamSpec) callconv(.c) void {
             inline for (0..(props.len)) |i| {
                 if (property_id == i + 1) {
                     switch (@FieldType(widget_type, props[i])) {
                         bool => {
-                            @field(self, props[i]) = c.g_value_get_boolean(val) > 0;
+                            @field(self, props[i]) = gtk.g_value_get_boolean(val) > 0;
                         },
                         GtkScrollablePolicyEnum => {
-                            @field(self, props[i]) = @enumFromInt(c.g_value_get_enum(val));
+                            @field(self, props[i]) = @enumFromInt(gtk.g_value_get_enum(val));
                         },
                         else => {
-                            const p = c.g_value_get_object(val);
+                            const p = gtk.g_value_get_object(val);
                             @field(self, props[i]) = @ptrCast(@alignCast(p));
                         },
                     }
-
-                    // const call_name = comptime snakeToCamel(props[i]);
-                    // if (@hasDecl(widget_type, "onSetProperty" ++ call_name)) {
-                    //     @field(widget_type, "onSetProperty" ++ call_name)(self);
-                    // }
 
                     return;
                 }
             }
         }
 
-        pub fn onGetProperty(self: *widget_type, property_id: c.guint, val: *c.GValue, _: *c.GParamSpec) callconv(.c) void {
+        pub fn onGetProperty(self: *widget_type, property_id: gtk.guint, val: *gtk.GValue, _: *gtk.GParamSpec) callconv(.c) void {
             inline for (0..(props.len)) |i| {
                 if (property_id == i + 1) {
                     switch (@FieldType(widget_type, props[i])) {
                         bool => {
-                            c.g_value_set_boolean(val, @intFromBool(@field(self, props[i])));
+                            gtk.g_value_set_boolean(val, @intFromBool(@field(self, props[i])));
                         },
                         GtkScrollablePolicyEnum => {
-                            c.g_value_set_enum(val, @intFromEnum((@field(self, props[i]))));
+                            gtk.g_value_set_enum(val, @intFromEnum((@field(self, props[i]))));
                         },
                         else => {
-                            c.g_value_set_object(val, @ptrCast(@field(self, props[i])));
+                            gtk.g_value_set_object(val, @ptrCast(@field(self, props[i])));
                         },
                     }
 
@@ -207,22 +191,22 @@ fn propertiesBinder(comptime widget_type: type, comptime props: []const []const 
     };
 }
 
-fn installBoolProp(widget_class: anytype, property_id: c.guint, name: []const u8) void {
-    const spec = c.g_param_spec_boolean(name.ptr, null, null, 0, c.G_PARAM_READWRITE);
-    defer c.g_param_spec_unref(spec);
-    c.g_object_class_install_property(@ptrCast(widget_class), property_id, spec);
+fn installBoolProp(widget_class: anytype, property_id: gtk.guint, name: []const u8) void {
+    const spec = gtk.g_param_spec_boolean(name.ptr, null, null, 0, gtk.G_PARAM_READWRITE);
+    defer gtk.g_param_spec_unref(spec);
+    gtk.g_object_class_install_property(@ptrCast(widget_class), property_id, spec);
 }
 
-fn installEnumProp(widget_class: anytype, property_id: c.guint, name: []const u8, enum_type: c.GType) void {
-    const spec = c.g_param_spec_enum(name.ptr, null, null, enum_type, 0, c.G_PARAM_READWRITE);
-    defer c.g_param_spec_unref(spec);
-    c.g_object_class_install_property(@ptrCast(widget_class), property_id, spec);
+fn installEnumProp(widget_class: anytype, property_id: gtk.guint, name: []const u8, enum_type: gtk.GType) void {
+    const spec = gtk.g_param_spec_enum(name.ptr, null, null, enum_type, 0, gtk.G_PARAM_READWRITE);
+    defer gtk.g_param_spec_unref(spec);
+    gtk.g_object_class_install_property(@ptrCast(widget_class), property_id, spec);
 }
 
-fn installObjectProp(widget_class: anytype, property_id: c.guint, name: []const u8, object_type: c.GType) void {
-    const spec = c.g_param_spec_object(name.ptr, null, null, object_type, c.G_PARAM_READWRITE);
-    defer c.g_param_spec_unref(spec);
-    c.g_object_class_install_property(@ptrCast(widget_class), property_id, spec);
+fn installObjectProp(widget_class: anytype, property_id: gtk.guint, name: []const u8, object_type: gtk.GType) void {
+    const spec = gtk.g_param_spec_object(name.ptr, null, null, object_type, gtk.G_PARAM_READWRITE);
+    defer gtk.g_param_spec_unref(spec);
+    gtk.g_object_class_install_property(@ptrCast(widget_class), property_id, spec);
 }
 
 fn widgetTypeName(comptime T: type) []const u8 {

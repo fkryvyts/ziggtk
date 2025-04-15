@@ -1,5 +1,6 @@
 const std = @import("std");
-const gtk = @import("gtk.zig");
+const gtk = @import("../gtk/gtk.zig");
+const gtkx = @import("../gtk/gtkx.zig");
 const image_book = @import("image_book.zig");
 const error_details = @import("error_details.zig");
 
@@ -7,18 +8,18 @@ pub const ZvImageWindowClass = extern struct {
     parent_class: gtk.AdwApplicationWindowClass,
 
     pub fn init(self: *ZvImageWindowClass) callconv(.c) void {
-        gtk.setTemplate(self, "ui/image_window.xml");
-        gtk.bindTemplateChildren(self, ZvImageWindow, &.{
+        gtkx.setTemplate(self, "ui/image_window.xml");
+        gtkx.bindTemplateChildren(self, ZvImageWindow, &.{
             "stack",
             "status_page",
             "image_book",
             "drop_target",
             "error_details",
         });
-        gtk.bindProperties(self, ZvImageWindow, &.{
+        gtkx.bindProperties(self, ZvImageWindow, &.{
             "fullscreened",
         });
-        gtk.bindActions(self, &.{
+        gtkx.bindActions(self, &.{
             .{ .n = "win.error_more_info", .f = @ptrCast(&ZvImageWindow.onWinErrorMoreInfo) },
             .{ .n = "win.reload", .f = @ptrCast(&ZvImageWindow.onWinReload) },
             .{ .n = "win.open", .f = @ptrCast(&ZvImageWindow.onWinOpen) },
@@ -40,7 +41,7 @@ pub const ZvImageWindow = extern struct {
 
         var types = [_]gtk.GType{gtk.g_file_get_type()};
         gtk.gtk_drop_target_set_gtypes(self.drop_target, &types, types.len);
-        gtk.signalConnect(self.drop_target, "drop", @ptrCast(&ZvImageWindow.onFileDrop), self);
+        gtkx.signalConnect(self.drop_target, "drop", @ptrCast(&ZvImageWindow.onFileDrop), self);
     }
 
     fn onWinErrorMoreInfo(self: *ZvImageWindow, _: [*c]const gtk.gchar) callconv(.c) void {
@@ -88,7 +89,7 @@ pub const ZvImageWindow = extern struct {
         var err: [*c]gtk.GError = null;
         const file = gtk.gtk_file_dialog_open_finish(dialog, res, &err);
         if (err != null) {
-            gtk.printAndCleanError(&err, "Error opening file");
+            gtkx.printAndCleanError(&err, "Error opening file");
             return;
         }
 
@@ -116,5 +117,5 @@ pub const ZvImageWindow = extern struct {
 };
 
 pub fn registerType() gtk.GType {
-    return gtk.registerType(gtk.adw_application_window_get_type(), ZvImageWindow, ZvImageWindowClass);
+    return gtkx.registerType(gtk.adw_application_window_get_type(), ZvImageWindow, ZvImageWindowClass);
 }

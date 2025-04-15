@@ -3,7 +3,8 @@ const imagex = @cImport({
 });
 
 const std = @import("std");
-const gtk = @import("../widgets/gtk.zig");
+const gtk = @import("../gtk/gtk.zig");
+const gtkx = @import("../gtk/gtkx.zig");
 const images = @import("images.zig");
 
 pub const CallbackFunc = ?*const fn (gtk.gpointer, *images.Image) void;
@@ -67,7 +68,7 @@ pub const Loader = struct {
         var err: [*c]gtk.GError = null;
         var err_msg: []u8 = "";
         const image_texture = gtk.gdk_texture_new_from_filename(path.ptr, &err);
-        defer gtk.printAndCleanError(&err, "Failed to load image");
+        defer gtkx.printAndCleanError(&err, "Failed to load image");
 
         if (err != null) {
             err_msg = std.mem.span(err.*.message);

@@ -1,6 +1,6 @@
 const std = @import("std");
-const gtk = @import("gtk.zig");
-const errors = @import("errors.zig");
+const gtk = @import("../gtk/gtk.zig");
+const gtkx = @import("../gtk/gtkx.zig");
 const images = @import("../decoders/images.zig");
 
 const background_color = gtk.GdkRGBA{ .red = 34 / 255, .green = 34 / 255, .blue = 38 / 255, .alpha = 1 };
@@ -9,7 +9,7 @@ pub const ZvImageViewClass = extern struct {
     parent_class: gtk.GtkWidgetClass,
 
     pub fn init(self: *ZvImageViewClass) callconv(.c) void {
-        gtk.bindProperties(self, ZvImageView, &.{
+        gtkx.bindProperties(self, ZvImageView, &.{
             "hadjustment",
             "vadjustment",
             "vscroll_policy",
@@ -25,8 +25,8 @@ pub const ZvImageView = extern struct {
     parent_instance: gtk.GtkWidget,
     hadjustment: ?*gtk.GtkAdjustment,
     vadjustment: ?*gtk.GtkAdjustment,
-    vscroll_policy: gtk.GtkScrollablePolicyEnum,
-    hscroll_policy: gtk.GtkScrollablePolicyEnum,
+    vscroll_policy: gtkx.GtkScrollablePolicyEnum,
+    hscroll_policy: gtkx.GtkScrollablePolicyEnum,
     image: ?*images.Image,
     zoom: f32,
     last_frame_time: gtk.gint64,
@@ -40,8 +40,8 @@ pub const ZvImageView = extern struct {
         self.max_frames = 1;
         self.tick_callback_id = 0;
 
-        gtk.signalConnect(self, "notify::hadjustment", @ptrCast(&ZvImageView.onNotifyHadjustment), null);
-        gtk.signalConnect(self, "notify::vadjustment", @ptrCast(&ZvImageView.onNotifyVadjustment), null);
+        gtkx.signalConnect(self, "notify::hadjustment", @ptrCast(&ZvImageView.onNotifyHadjustment), null);
+        gtkx.signalConnect(self, "notify::vadjustment", @ptrCast(&ZvImageView.onNotifyVadjustment), null);
     }
 
     pub fn setZoom(self: *ZvImageView, zoom: f32) void {
@@ -94,11 +94,11 @@ pub const ZvImageView = extern struct {
     }
 
     fn onNotifyHadjustment(self: *ZvImageView) callconv(.c) void {
-        gtk.signalConnect(self.hadjustment, "value-changed", @ptrCast(&ZvImageView.onAdjustmentValueChanged), self);
+        gtkx.signalConnect(self.hadjustment, "value-changed", @ptrCast(&ZvImageView.onAdjustmentValueChanged), self);
     }
 
     fn onNotifyVadjustment(self: *ZvImageView) callconv(.c) void {
-        gtk.signalConnect(self.vadjustment, "value-changed", @ptrCast(&ZvImageView.onAdjustmentValueChanged), self);
+        gtkx.signalConnect(self.vadjustment, "value-changed", @ptrCast(&ZvImageView.onAdjustmentValueChanged), self);
     }
 
     fn onAdjustmentValueChanged(_: *gtk.GtkAdjustment, self: *ZvImageView) callconv(.c) void {
@@ -179,7 +179,7 @@ pub const ZvImageView = extern struct {
 };
 
 pub fn registerType() gtk.GType {
-    const t = gtk.registerType(gtk.gtk_widget_get_type(), ZvImageView, ZvImageViewClass);
+    const t = gtkx.registerType(gtk.gtk_widget_get_type(), ZvImageView, ZvImageViewClass);
     gtk.g_type_add_interface_static(t, gtk.gtk_scrollable_get_type(), &.{});
     return t;
 }

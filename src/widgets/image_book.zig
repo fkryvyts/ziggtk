@@ -1,13 +1,14 @@
 const std = @import("std");
-const gtk = @import("gtk.zig");
+const gtk = @import("../gtk/gtk.zig");
+const gtkx = @import("../gtk/gtkx.zig");
 const image_page = @import("image_page.zig");
 
 pub const ZvImageBookClass = extern struct {
     parent_class: gtk.AdwBinClass,
 
     pub fn init(self: *ZvImageBookClass) callconv(.c) void {
-        gtk.setTemplate(self, "ui/image_book.xml");
-        gtk.bindTemplateChildren(self, ZvImageBook, &.{
+        gtkx.setTemplate(self, "ui/image_book.xml");
+        gtkx.bindTemplateChildren(self, ZvImageBook, &.{
             "image_page",
             "zoom_to_list",
             "zoom_to_300",
@@ -17,7 +18,7 @@ pub const ZvImageBookClass = extern struct {
             "zoom_to_50",
             "zoom_menu_button",
         });
-        gtk.bindProperties(self, ZvImageBook, &.{
+        gtkx.bindProperties(self, ZvImageBook, &.{
             "zoom_toggle_state",
         });
     }
@@ -37,7 +38,7 @@ pub const ZvImageBook = extern struct {
 
     pub fn init(self: *ZvImageBook) callconv(.c) void {
         gtk.gtk_widget_init_template(@ptrCast(self));
-        gtk.signalConnect(self.zoom_to_list, "row-activated", @ptrCast(&ZvImageBook.onZoomToListRowActivated), self);
+        gtkx.signalConnect(self.zoom_to_list, "row-activated", @ptrCast(&ZvImageBook.onZoomToListRowActivated), self);
     }
 
     pub fn currentPage(self: *ZvImageBook) *image_page.ZvImagePage {
@@ -66,5 +67,5 @@ pub const ZvImageBook = extern struct {
 };
 
 pub fn registerType() gtk.GType {
-    return gtk.registerType(gtk.adw_bin_get_type(), ZvImageBook, ZvImageBookClass);
+    return gtkx.registerType(gtk.adw_bin_get_type(), ZvImageBook, ZvImageBookClass);
 }

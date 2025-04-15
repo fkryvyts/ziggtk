@@ -1,16 +1,16 @@
 const std = @import("std");
-const gtk = @import("gtk.zig");
-const image_view = @import("image_view.zig");
-const errors = @import("errors.zig");
+const gtk = @import("../gtk/gtk.zig");
+const gtkx = @import("../gtk/gtkx.zig");
 const loader = @import("../decoders/loader.zig");
 const images = @import("../decoders/images.zig");
+const image_view = @import("image_view.zig");
 
 pub const ZvImagePageClass = extern struct {
     parent_class: gtk.AdwBinClass,
 
     pub fn init(self: *ZvImagePageClass) callconv(.c) void {
-        gtk.setTemplate(self, "ui/image_page.xml");
-        gtk.bindTemplateChildren(self, ZvImagePage, &.{
+        gtkx.setTemplate(self, "ui/image_page.xml");
+        gtkx.bindTemplateChildren(self, ZvImagePage, &.{
             "stack",
             "spinner_page",
             "error_page",
@@ -38,8 +38,8 @@ pub const ZvImagePage = extern struct {
     pub fn init(self: *ZvImagePage) callconv(.c) void {
         gtk.gtk_widget_init_template(@ptrCast(self));
 
-        gtk.signalConnect(self.right_click_gesture, "pressed", @ptrCast(&ZvImagePage.onRightClickGesture), self);
-        gtk.signalConnect(self.press_gesture, "pressed", @ptrCast(&ZvImagePage.onLongPressGesture), self);
+        gtkx.signalConnect(self.right_click_gesture, "pressed", @ptrCast(&ZvImagePage.onRightClickGesture), self);
+        gtkx.signalConnect(self.press_gesture, "pressed", @ptrCast(&ZvImagePage.onLongPressGesture), self);
     }
 
     pub fn setZoom(self: *ZvImagePage, zoom: f32) void {
@@ -97,5 +97,5 @@ pub const ZvImagePage = extern struct {
 };
 
 pub fn registerType() gtk.GType {
-    return gtk.registerType(gtk.adw_bin_get_type(), ZvImagePage, ZvImagePageClass);
+    return gtkx.registerType(gtk.adw_bin_get_type(), ZvImagePage, ZvImagePageClass);
 }

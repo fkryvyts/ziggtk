@@ -1,5 +1,5 @@
 const std = @import("std");
-const gtk = @import("../widgets/gtk.zig");
+const gtk = @import("../gtk/gtk.zig");
 
 pub const ImageOptions = struct {
     allocator: std.mem.Allocator,

@@ -1,5 +1,6 @@
 const std = @import("std");
-const gtk = @import("gtk.zig");
+const gtk = @import("../gtk/gtk.zig");
+const gtkx = @import("../gtk/gtkx.zig");
 const image_view = @import("image_view.zig");
 const image_page = @import("image_page.zig");
 const image_book = @import("image_book.zig");
@@ -17,18 +18,18 @@ pub fn runApp() !void {
     gtk.adw_init();
     registerTypes();
 
-    try gtk.installResources("resources/gresources.gresource");
+    try gtkx.installResources(@embedFile("resources/gresources.gresource"));
 
     try loader.default_loader.init(std.heap.page_allocator);
     defer loader.default_loader.deinit();
 
-    const b = try gtk.newBuilder("ui/builder.xml");
+    const b = try gtkx.newBuilder("ui/builder.xml");
     defer gtk.g_object_unref(b);
 
-    const app = try gtk.newApplication();
-    const w: *image_window.ZvImageWindow = @ptrCast(try gtk.getBuilderObject(b, "image_window"));
+    const app = try gtkx.newApplication();
+    const w: *image_window.ZvImageWindow = @ptrCast(try gtkx.getBuilderObject(b, "image_window"));
 
-    gtk.signalConnect(app, "activate", &onAppActivate, null);
+    gtkx.signalConnect(app, "activate", &onAppActivate, null);
 
     application = app;
     img_window = w;
